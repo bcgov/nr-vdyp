@@ -15,6 +15,7 @@ public class FileMappingModel {
 	private String comsObjectGUID;
 	private URL downloadURL;
 	private boolean debugModePermitted;
+	private Integer estimatedPolygonCount;
 
 	public String getFileMappingGUID() {
 		return fileMappingGUID;
@@ -62,5 +63,13 @@ public class FileMappingModel {
 
 	public void setDebugModePermitted(boolean debugModePermitted) {
 		this.debugModePermitted = debugModePermitted;
+	}
+
+	public Integer getEstimatedPolygonCount() {
+		return estimatedPolygonCount;
+	}
+
+	public void setEstimatedPolygonCount(Integer estimatedPolygonCount) {
+		this.estimatedPolygonCount = estimatedPolygonCount;
 	}
 }

@@ -616,6 +616,22 @@ export const formatNumber = (value: number | null): string => {
   return (value ?? 0).toLocaleString()
 }
 
+/**
+ * Checks if the Admin Dashboard should show the estimated polygon count for a projection.
+ * This is true when the projection is queued and its polygon file has a count saved at upload.
+ *
+ * @returns {boolean} True to show the estimate, false to show '-'
+ */
+export const hasPolygonEstimate = (projection: {
+  status: string
+  estimatedPolygonCount: number | null
+}): boolean => {
+  return (
+    projection.status === CONSTANTS.PROJECTION_STATUS.QUEUED &&
+    projection.estimatedPolygonCount !== null
+  )
+}
+
 const BYTE_UNITS = ['B', 'KB', 'MB', 'GB', 'TB'] as const
 
 /**

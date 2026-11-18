@@ -95,7 +95,10 @@ class TestFileMappingService {
 		);
 	}
 
-	private boolean uploadPolygonFileAndGetDebugModePermitted(Path tempDir, int dataRowCount) throws Exception {
+	private record PersistedUpload(boolean debugModePermitted, Integer estimatedPolygonCount) {
+	}
+
+	private PersistedUpload uploadPolygonFile(Path tempDir, int dataRowCount) throws Exception {
 		UUID fileSetGUID = UUID.randomUUID();
 		ProjectionFileSetEntity fileSetEntity = new ProjectionFileSetEntity();
 		fileSetEntity.setProjectionFileSetGUID(fileSetGUID);
@@ -128,24 +131,33 @@ class TestFileMappingService {
 					in.transferTo(OutputStream.nullOutputStream());
 					return createdObject;
 				});
-		when(persistenceService.persistFileMapping(eq(objectGuid), eq(fileSetGUID), eq("polygon.csv"), anyBoolean()))
-				.thenReturn(new FileMappingModel());
+		when(
+				persistenceService
+						.persistFileMapping(eq(objectGuid), eq(fileSetGUID), eq("polygon.csv"), anyBoolean(), any())
+		).thenReturn(new FileMappingModel());
 
 		service.createNewFile("bucket-guid-123", fileSetEntity, fileUpload);
 
 		ArgumentCaptor<Boolean> permitted = ArgumentCaptor.forClass(Boolean.class);
-		verify(persistenceService).persistFileMapping(any(), any(), any(), permitted.capture());
-		return permitted.getValue();
+		ArgumentCaptor<Integer> estimatedPolygonCount = ArgumentCaptor.forClass(Integer.class);
+		verify(persistenceService)
+				.persistFileMapping(any(), any(), any(), permitted.capture(), estimatedPolygonCount.capture());
+		return new PersistedUpload(permitted.getValue(), estimatedPolygonCount.getValue());
 	}
 
 	@Test
 	void createNewFile_singlePolygonFile_permitsDebugMode(@TempDir Path tempDir) throws Exception {
-		assertTrue(uploadPolygonFileAndGetDebugModePermitted(tempDir, 1));
+		assertTrue(uploadPolygonFile(tempDir, 1).debugModePermitted());
 	}
 
 	@Test
 	void createNewFile_multiPolygonFile_doesNotPermitDebugMode(@TempDir Path tempDir) throws Exception {
-		assertFalse(uploadPolygonFileAndGetDebugModePermitted(tempDir, 2));
+		assertFalse(uploadPolygonFile(tempDir, 2).debugModePermitted());
+	}
+
+	@Test
+	void createNewFile_polygonFile_recordsFullPolygonCountBeyondDebugModeLimit(@TempDir Path tempDir) throws Exception {
+		assertEquals(5, uploadPolygonFile(tempDir, 5).estimatedPolygonCount());
 	}
 
 	@Test
@@ -183,7 +195,7 @@ class TestFileMappingService {
 		FileMappingModel persistedModel = new FileMappingModel();
 		persistedModel.setComsObjectGUID(objectGuid.toString());
 		persistedModel.setFilename("input.csv");
-		when(persistenceService.persistFileMapping(objectGuid, fileSetGUID, "input.csv", false))
+		when(persistenceService.persistFileMapping(objectGuid, fileSetGUID, "input.csv", false, null))
 				.thenReturn(persistedModel);
 
 		FileMappingModel result = service.createNewFile("bucket-guid-123", fileSetEntity, fileUpload);
@@ -192,7 +204,8 @@ class TestFileMappingService {
 		assertEquals(objectGuid.toString(), result.getComsObjectGUID());
 		assertEquals("input.csv", result.getFilename());
 
-		verify(persistenceService).persistFileMapping(objectGuid, fileSetGUID, "input.csv", false);
+		// Not a polygon file, so no polygon count is recorded
+		verify(persistenceService).persistFileMapping(objectGuid, fileSetGUID, "input.csv", false, null);
 	}
 
 	@Test
@@ -206,7 +219,7 @@ class TestFileMappingService {
 		);
 
 		verify(repository, never()).persist(any(FileMappingEntity.class));
-		verify(persistenceService, never()).persistFileMapping(any(), any(), any(), anyBoolean());
+		verify(persistenceService, never()).persistFileMapping(any(), any(), any(), anyBoolean(), any());
 	}
 
 	@Test
@@ -223,7 +236,7 @@ class TestFileMappingService {
 		);
 
 		verify(comsClient, never()).createObject(any(), any(), anyLong(), any(), any());
-		verify(persistenceService, never()).persistFileMapping(any(), any(), any(), anyBoolean());
+		verify(persistenceService, never()).persistFileMapping(any(), any(), any(), anyBoolean(), any());
 	}
 
 	@Test
@@ -252,7 +265,7 @@ class TestFileMappingService {
 		);
 
 		verify(comsClient).createObject(eq("bucket-guid-123"), any(), eq(Files.size(uploaded)), eq("text/csv"), any());
-		verify(persistenceService, never()).persistFileMapping(any(), any(), any(), anyBoolean());
+		verify(persistenceService, never()).persistFileMapping(any(), any(), any(), anyBoolean(), any());
 	}
 
 	@Test
@@ -283,7 +296,7 @@ class TestFileMappingService {
 
 		assertEquals(Response.Status.REQUEST_ENTITY_TOO_LARGE, ex.getStatus());
 		verify(comsClient).createObject(eq("bucket-guid-123"), any(), eq(7L), eq("text/csv"), any());
-		verify(persistenceService, never()).persistFileMapping(any(), any(), any(), anyBoolean());
+		verify(persistenceService, never()).persistFileMapping(any(), any(), any(), anyBoolean(), any());
 	}
 
 	@Test
@@ -307,7 +320,7 @@ class TestFileMappingService {
 				() -> service.createNewFile("bucket-guid-123", fileSetEntity, fileUpload)
 		);
 
-		verify(persistenceService, never()).persistFileMapping(any(), any(), any(), anyBoolean());
+		verify(persistenceService, never()).persistFileMapping(any(), any(), any(), anyBoolean(), any());
 	}
 
 	@Test
@@ -335,7 +348,7 @@ class TestFileMappingService {
 					in.transferTo(OutputStream.nullOutputStream());
 					return createdObject;
 				});
-		when(persistenceService.persistFileMapping(objectGuid, fileSetGUID, "input.csv", false))
+		when(persistenceService.persistFileMapping(objectGuid, fileSetGUID, "input.csv", false, null))
 				.thenThrow(new RuntimeException("database down"));
 		COMSObjectVersion version = new COMSObjectVersion("v1", "s3v1", objectGuid.toString(), false);
 		when(comsClient.getObjectVersions(objectGuid.toString())).thenReturn(List.of(version));
@@ -437,6 +450,18 @@ class TestFileMappingService {
 	}
 
 	@Test
+	void getEstimatedPolygonCountsForFileSets_delegatesToRepository() {
+		List<UUID> fileSetGUIDs = List.of(UUID.randomUUID(), UUID.randomUUID());
+		Map<UUID, Integer> expected = Map.of(fileSetGUIDs.get(0), 1234);
+		when(repository.findEstimatedPolygonCountsByFileSet(fileSetGUIDs)).thenReturn(expected);
+
+		Map<UUID, Integer> result = service.getEstimatedPolygonCountsForFileSets(fileSetGUIDs);
+
+		assertEquals(expected, result);
+		verify(repository).findEstimatedPolygonCountsByFileSet(fileSetGUIDs);
+	}
+
+	@Test
 	void deleteFilesForSet_ok_deletesRepositoryEntities() throws Exception {
 		UUID fileMappingGuid1 = UUID.randomUUID();
 		UUID fileMappingGuid2 = UUID.randomUUID();
@@ -527,6 +552,7 @@ class TestFileMappingService {
 		var file = new FileMappingModel();
 		file.setDownloadURL(new URI("https://example.com/file.bin").toURL());
 		file.setFilename("file.bin");
+		file.setEstimatedPolygonCount(42);
 
 		ProjectionFileSetEntity fileSetEntity = fileSetEntity(UUID.randomUUID());
 		var bucketGuid = "bucket-123";
@@ -554,7 +580,7 @@ class TestFileMappingService {
 		persistedModel.setFilename("file.bin");
 		when(
 				persistenceService.persistFileMapping(
-						UUID.fromString(comsObj.id()), fileSetEntity.getProjectionFileSetGUID(), "file.bin", false
+						UUID.fromString(comsObj.id()), fileSetEntity.getProjectionFileSetGUID(), "file.bin", false, 42
 				)
 		).thenReturn(persistedModel);
 
@@ -563,7 +589,7 @@ class TestFileMappingService {
 
 		// Assert
 		verify(persistenceService).persistFileMapping(
-				UUID.fromString(comsObj.id()), fileSetEntity.getProjectionFileSetGUID(), "file.bin", false
+				UUID.fromString(comsObj.id()), fileSetEntity.getProjectionFileSetGUID(), "file.bin", false, 42
 		);
 
 		verify(comsClient).createObject(
@@ -608,8 +634,10 @@ class TestFileMappingService {
 				)
 		);
 		var databaseFailure = new IllegalStateException("Database write failed");
-		when(persistenceService.persistFileMapping(objectId, fileSet.getProjectionFileSetGUID(), "file.bin", false))
-				.thenThrow(databaseFailure);
+		when(
+				persistenceService
+						.persistFileMapping(objectId, fileSet.getProjectionFileSetGUID(), "file.bin", false, null)
+		).thenThrow(databaseFailure);
 		when(comsClient.getObjectVersions(objectId.toString())).thenReturn(List.of());
 		when(comsClient.deleteObject(objectId.toString())).thenReturn(Response.noContent().build());
 

@@ -986,6 +986,32 @@
           }
         ]
       }
+    },
+    {
+      "changeSet": {
+        "id": "01_00_24_00",
+        "author": "rjeong",
+        "changes": [
+          {
+            "tagDatabase": {
+              "tag": "version_01_00_24_00"
+            }
+          },
+          {
+            "sqlFile": {
+              "dbms": "postgresql",
+              "endDelimiter": ";",
+              "path": "scripts/01_00_24/00/ddl/tables/app-vdyp.file_mapping.sql",
+              "relativeToChangelogFile": true
+            }
+          }
+        ],
+        "rollback": [
+          {
+            "sql": "ALTER TABLE \"app-vdyp\".\"file_mapping\" DROP COLUMN IF EXISTS \"estimated_polygon_count\""
+          }
+        ]
+      }
     }
   ]
 }

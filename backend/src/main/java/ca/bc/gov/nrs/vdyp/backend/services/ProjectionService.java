@@ -481,8 +481,24 @@ public class ProjectionService {
 				.comparing((ProjectionEntity e) -> isPrioritized(e, batchMappings)).reversed()
 				.thenComparing(byWorkerCountDesc);
 
-		return entities.stream().sorted(byPrioritizedThenWorkerCountDesc).map(e -> toRichModel(e, batchMappings))
-				.toList();
+		Map<UUID, Integer> estimatedPolygonCounts = getEstimatedPolygonCounts(entities);
+
+		return entities.stream().sorted(byPrioritizedThenWorkerCountDesc).map(e -> {
+			var model = toRichModel(e, batchMappings);
+			// Polygon count saved at upload, shown on the Admin Dashboard while the projection is queued
+			if (e.getPolygonFileSet() != null) {
+				model.setEstimatedPolygonCount(
+						estimatedPolygonCounts.get(e.getPolygonFileSet().getProjectionFileSetGUID())
+				);
+			}
+			return model;
+		}).toList();
+	}
+
+	private Map<UUID, Integer> getEstimatedPolygonCounts(List<ProjectionEntity> entities) {
+		List<UUID> polygonFileSetGUIDs = entities.stream().map(ProjectionEntity::getPolygonFileSet)
+				.filter(Objects::nonNull).map(ProjectionFileSetEntity::getProjectionFileSetGUID).toList();
+		return fileSetService.getEstimatedPolygonCountsForFileSets(polygonFileSetGUIDs);
 	}
 
 	private boolean isPrioritized(ProjectionEntity entity, Map<UUID, ProjectionBatchMappingModel> batchMappings) {

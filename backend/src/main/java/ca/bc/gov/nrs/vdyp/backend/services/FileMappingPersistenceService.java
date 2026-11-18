@@ -28,11 +28,20 @@ public class FileMappingPersistenceService {
 	@Transactional
 	public FileMappingModel
 			persistFileMapping(UUID objectGUID, UUID fileSetGUID, String fileName, boolean debugModePermitted) {
+		return persistFileMapping(objectGUID, fileSetGUID, fileName, debugModePermitted, null);
+	}
+
+	@Transactional
+	public FileMappingModel persistFileMapping(
+			UUID objectGUID, UUID fileSetGUID, String fileName, boolean debugModePermitted,
+			Integer estimatedPolygonCount
+	) {
 		FileMappingEntity entity = new FileMappingEntity();
 		entity.setComsObjectGUID(objectGUID);
 		entity.setProjectionFileSet(em.find(ProjectionFileSetEntity.class, fileSetGUID));
 		entity.setFilename(fileName);
 		entity.setDebugModePermitted(debugModePermitted);
+		entity.setEstimatedPolygonCount(estimatedPolygonCount);
 		repository.persist(entity);
 		return assembler.toModel(entity);
 	}

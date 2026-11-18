@@ -534,6 +534,48 @@ class ProjectionServiceTest {
 		assertThat(results).extracting(ProjectionModel::getReportTitle)
 				.containsExactly("Low Threads Prioritized", "High Threads Not Prioritized");
 	}
+
+	@Test
+	void getAllRunningProjections_setsEstimatedPolygonCountFromPolygonFileSet() {
+		UUID countedFileSetGUID = UUID.randomUUID();
+		ProjectionFileSetEntity countedFileSet = new ProjectionFileSetEntity();
+		countedFileSet.setProjectionFileSetGUID(countedFileSetGUID);
+		ProjectionEntity counted = new ProjectionEntity();
+		counted.setProjectionGUID(UUID.randomUUID());
+		counted.setReportTitle("Counted");
+		counted.setPolygonFileSet(countedFileSet);
+
+		UUID uncountedFileSetGUID = UUID.randomUUID();
+		ProjectionFileSetEntity uncountedFileSet = new ProjectionFileSetEntity();
+		uncountedFileSet.setProjectionFileSetGUID(uncountedFileSetGUID);
+		ProjectionEntity uncounted = new ProjectionEntity();
+		uncounted.setProjectionGUID(UUID.randomUUID());
+		uncounted.setReportTitle("Uncounted");
+		uncounted.setPolygonFileSet(uncountedFileSet);
+
+		ProjectionEntity noPolygonFileSet = new ProjectionEntity();
+		noPolygonFileSet.setProjectionGUID(UUID.randomUUID());
+		noPolygonFileSet.setReportTitle("No Polygon File Set");
+
+		when(
+				repository.findByStatuses(
+						List.of(
+								ProjectionStatusCodeModel.RUNNING, ProjectionStatusCodeModel.STUCK,
+								ProjectionStatusCodeModel.QUEUED
+						)
+				)
+		).thenReturn(List.of(counted, uncounted, noPolygonFileSet));
+		when(expiryConfig.expiryFrom(any())).thenReturn(OffsetDateTime.now());
+		when(fileSetService.getEstimatedPolygonCountsForFileSets(List.of(countedFileSetGUID, uncountedFileSetGUID)))
+				.thenReturn(Map.of(countedFileSetGUID, 12_345));
+
+		Map<String, Integer> estimates = new HashMap<>();
+		service.getAllRunningProjections()
+				.forEach(model -> estimates.put(model.getReportTitle(), model.getEstimatedPolygonCount()));
+
+		assertThat(estimates).containsEntry("Counted", 12_345).containsEntry("Uncounted", null)
+				.containsEntry("No Polygon File Set", null);
+	}
 	// ==========================================================
 	// getProjectionEntity
 	// ==========================================================

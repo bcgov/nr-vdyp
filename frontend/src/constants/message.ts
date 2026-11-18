@@ -339,6 +339,11 @@ export const SYSTEM_STORAGE = Object.freeze({
   ORPHANED_STORAGE_EXISTS: 'Orphaned Storage Exists',
 })
 
+export const ADMIN_DASHBOARD_POLYGONS = Object.freeze({
+  ESTIMATE_TOOLTIP:
+    'Polygon counts for queued projections are pre-execution estimates based on the uploaded input dataset.',
+})
+
 export const VALIDATION_WARN = Object.freeze({
   FORM_REF_NULL: 'Form reference is null. Validation skipped.',
 })

@@ -25,6 +25,7 @@ const sampleProjections: AdminProjection[] = [
     workerCount: 16,
     completedPolygonCount: 184320,
     polygonCount: 256000,
+    estimatedPolygonCount: 256000,
     isPrioritized: true,
   },
   {
@@ -37,6 +38,20 @@ const sampleProjections: AdminProjection[] = [
     workerCount: 6,
     completedPolygonCount: 121584,
     polygonCount: 256000,
+    estimatedPolygonCount: 256000,
+    isPrioritized: false,
+  },
+  {
+    projectionGUID: '63c26de0-f6f3-42c2-ddd2-3c2b1e60d033',
+    title: 'Coastal Inventory Update',
+    ownerDisplayName: 'A. Singh',
+    userType: 'BCEID',
+    startDate: null,
+    status: 'Queued',
+    workerCount: 0,
+    completedPolygonCount: 0,
+    polygonCount: 0,
+    estimatedPolygonCount: 48210,
     isPrioritized: false,
   },
 ]

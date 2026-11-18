@@ -4,17 +4,20 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -57,5 +60,34 @@ class FileMappingRepositoryTest {
 		assertThat(repository.findFileSetGUIDsWithFiles(fileSetGUIDs)).containsExactly(withFile);
 
 		verify(query).setParameter("fileSetGUIDs", fileSetGUIDs);
+	}
+
+	@Test
+	void findEstimatedPolygonCountsByFileSet_emptyInput_returnsEmptyWithoutQuery() {
+		assertThat(repository.findEstimatedPolygonCountsByFileSet(List.of())).isEmpty();
+
+		verify(repository, never()).getEntityManager();
+	}
+
+	@Test
+	@SuppressWarnings("unchecked")
+	void findEstimatedPolygonCountsByFileSet_mapsSummedCountsPerFileSet() {
+		UUID first = UUID.randomUUID();
+		UUID second = UUID.randomUUID();
+		List<UUID> fileSetGUIDs = List.of(first, second);
+		TypedQuery<Object[]> countQuery = mock(TypedQuery.class);
+
+		doReturn(em).when(repository).getEntityManager();
+		ArgumentCaptor<String> jpql = ArgumentCaptor.forClass(String.class);
+		when(em.createQuery(jpql.capture(), eq(Object[].class))).thenReturn(countQuery);
+		when(countQuery.setParameter("fileSetGUIDs", fileSetGUIDs)).thenReturn(countQuery);
+
+		List<Object[]> rows = List.<Object[]>of(new Object[] { first, 1500L });
+		when(countQuery.getResultList()).thenReturn(rows);
+
+		Map<UUID, Integer> result = repository.findEstimatedPolygonCountsByFileSet(fileSetGUIDs);
+
+		assertThat(result).containsExactly(Map.entry(first, 1500));
+		assertThat(jpql.getValue()).contains("having count(fm.estimatedPolygonCount) = count(fm)");
 	}
 }

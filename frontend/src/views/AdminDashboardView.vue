@@ -119,7 +119,7 @@ import type { StorageStatusModel, StorageCleanupReportModel } from '@/services/v
 import { fetchAllRunningProjections, fetchThreadCapacity, fetchStorageStatus } from '@/services/adminService'
 import { cancelProjection, prioritizeProjection } from '@/services/projectionService'
 import { useNotificationStore } from '@/stores/common/notificationStore'
-import { formatBytes } from '@/utils/util'
+import { formatBytes, hasPolygonEstimate } from '@/utils/util'
 
 const notificationStore = useNotificationStore()
 
@@ -335,11 +335,14 @@ const getSortValue = (projection: AdminProjection, key: string): string | number
   return 0
 }
 
-// Polygons sorts by the total (denominator) count, since the Progress column already covers the
-// completed/total ratio. Queued projections display '-' (no polygon counts yet), so they're
-// sorted as lower than any running projection's counts: below it in descending order, above it
-// (first) in ascending order.
+// Returns [total, completed] for sorting the Polygons column. Sorting uses the total first
+// (the Progress column already covers the completed/total ratio), then completed for ties.
+// - Running: the actual total and completed counts from batch.
+// - Queued with an estimate: the estimate as the total, and -1 as completed, so it comes
+//   just after a running projection with the same total.
+// - Queued without an estimate (shown as '-'): -1 for both, so it sorts lowest.
 const getPolygonSortValues = (projection: AdminProjection): [number, number] => {
+  if (hasPolygonEstimate(projection)) return [projection.estimatedPolygonCount ?? -1, -1]
   if (projection.status === PROJECTION_STATUS.QUEUED) return [-1, -1]
   return [projection.polygonCount, projection.completedPolygonCount]
 }

@@ -7,4 +7,6 @@ export interface FileMappingModel {
   filename: string | null
   downloadURL: string | null
   debugModePermitted: boolean
+  // Data rows counted at upload for a polygon file; null for layer and result files, and for polygon files uploaded before counts were saved
+  estimatedPolygonCount?: number | null
 }
