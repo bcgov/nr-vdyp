@@ -49,6 +49,7 @@ export const transformAdminProjection = (model: ProjectionModel): AdminProjectio
     workerCount: batchMapping?.workerCount ?? 0,
     completedPolygonCount: batchMapping?.completedPolygonCount ?? 0,
     polygonCount: batchMapping?.polygonCount ?? 0,
+    estimatedPolygonCount: model.estimatedPolygonCount ?? null,
     isPrioritized: batchMapping?.isPrioritized ?? false,
   }
 }

@@ -25,6 +25,7 @@ describe('AdminProjectionTable.vue', () => {
     workerCount: 16,
     completedPolygonCount: 184320,
     polygonCount: 256000,
+    estimatedPolygonCount: null,
     isPrioritized: false,
     ...overrides,
   })
@@ -138,5 +139,41 @@ describe('AdminProjectionTable.vue', () => {
     cy.get('.table-cell').eq(5).should('contain.text', '-') // Threads
     cy.get('.table-cell').eq(6).should('contain.text', '-') // Progress
     cy.get('.table-cell').eq(7).should('contain.text', '-') // Polygons
+    cy.get('.polygons-estimate').should('not.exist')
+  })
+
+  it('shows the estimated polygon count for queued projections with an upload-time count', () => {
+    mountComponent([
+      createProjection({
+        status: 'Queued',
+        startDate: null,
+        workerCount: 0,
+        completedPolygonCount: 0,
+        polygonCount: 0,
+        estimatedPolygonCount: 12345,
+      }),
+    ])
+
+    cy.get('.table-cell').eq(6).should('contain.text', '-')
+    cy.get('.table-cell')
+      .eq(7)
+      .find('.polygons-estimate')
+      .should('exist')
+      .within(() => {
+        cy.get('.polygons-completed').should('have.text', '-')
+        cy.get('.polygons-total').should('contain.text', `/ ${(12345).toLocaleString()}`)
+      })
+  })
+
+  it('shows the pre-execution estimate tooltip on hover', () => {
+    mountComponent([
+      createProjection({ status: 'Queued', startDate: null, estimatedPolygonCount: 500 }),
+    ])
+
+    cy.get('.polygons-estimate').trigger('mouseenter')
+    cy.get('.v-tooltip').should(
+      'contain.text',
+      'pre-execution estimates based on the uploaded input dataset',
+    )
   })
 })

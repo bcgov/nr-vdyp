@@ -75,6 +75,7 @@ erDiagram
         uuid coms_object_guid
         varchar filename
         boolean is_debug_mode_permitted
+        integer estimated_polygon_count
     }
     projection_batch_mapping {
         uuid projection_batch_mapping_guid PK

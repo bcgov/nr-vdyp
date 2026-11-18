@@ -25,6 +25,7 @@ import {
   normalizeNum,
   numEq,
   strEq,
+  hasPolygonEstimate,
 } from '@/utils/util'
 import JSZip from 'jszip'
 import { CONSTANTS } from '@/constants'
@@ -377,6 +378,17 @@ describe('Util Functions Unit Tests', () => {
       addExecutionOptionsFromMappings(selected, excluded, [])
       assert.isEmpty(selected)
       assert.isEmpty(excluded)
+    })
+  })
+
+  describe('hasPolygonEstimate', () => {
+    it('is true only for a queued projection with a recorded estimate', () => {
+      const { QUEUED, RUNNING, STUCK } = CONSTANTS.PROJECTION_STATUS
+      assert.isTrue(hasPolygonEstimate({ status: QUEUED, estimatedPolygonCount: 100 }))
+      assert.isTrue(hasPolygonEstimate({ status: QUEUED, estimatedPolygonCount: 0 }))
+      assert.isFalse(hasPolygonEstimate({ status: QUEUED, estimatedPolygonCount: null }))
+      assert.isFalse(hasPolygonEstimate({ status: RUNNING, estimatedPolygonCount: 100 }))
+      assert.isFalse(hasPolygonEstimate({ status: STUCK, estimatedPolygonCount: 100 }))
     })
   })
 })

@@ -34,6 +34,7 @@ describe('AdminProjectionCardList.vue', () => {
     workerCount: 16,
     completedPolygonCount: 184320,
     polygonCount: 256000,
+    estimatedPolygonCount: null,
     isPrioritized: false,
     ...overrides,
   })
@@ -103,5 +104,18 @@ describe('AdminProjectionCardList.vue', () => {
     cy.get('.card-info-value').eq(3).should('contain.text', '-') // Threads
     cy.get('.card-info-value').eq(4).should('contain.text', '-') // Progress
     cy.get('.card-info-value').eq(5).should('contain.text', '-') // Polygons
+    cy.get('.polygons-estimate').should('not.exist')
+  })
+
+  it('shows the estimated polygon count for queued projections with an upload-time count', () => {
+    mountComponent([
+      createProjection({ status: 'Queued', startDate: null, workerCount: 0, estimatedPolygonCount: 12345 }),
+    ])
+
+    cy.get('.card-info-value')
+      .eq(5)
+      .should('have.class', 'polygons-estimate')
+      .find('.polygons-total')
+      .should('contain.text', `/ ${(12345).toLocaleString()}`)
   })
 })

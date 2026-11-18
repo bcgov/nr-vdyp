@@ -86,6 +86,9 @@ export interface ProjectionModel {
   // Only populated in the current user's projection list; null or absent in all other responses
   hasPolygonFile?: boolean | null
   hasLayerFile?: boolean | null
+  // Only populated in the admin running projections list: the polygon count recorded when the
+  // polygon file was uploaded, used as a pre-execution estimate. Null when not recorded.
+  estimatedPolygonCount?: number | null
 }
 
 export interface CancelProjectionRequest {

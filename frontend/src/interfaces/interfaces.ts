@@ -88,6 +88,8 @@ export interface AdminProjection {
   workerCount: number
   completedPolygonCount: number
   polygonCount: number
+  // Pre-execution estimate from the uploaded polygon file, shown while the projection is queued
+  estimatedPolygonCount: number | null
   isPrioritized: boolean
 }
 

@@ -250,6 +250,10 @@ public class ProjectionFileSetService {
 		return fileMappingService.getFileSetGUIDsWithFiles(fileSetGUIDs);
 	}
 
+	public Map<UUID, Integer> getEstimatedPolygonCountsForFileSets(Collection<UUID> fileSetGUIDs) {
+		return fileMappingService.getEstimatedPolygonCountsForFileSets(fileSetGUIDs);
+	}
+
 	@Transactional(Transactional.TxType.NOT_SUPPORTED)
 	public void duplicateFilesFromTo(ProjectionFileSetEntity fromFileSet, ProjectionFileSetEntity toFileSet)
 			throws ProjectionServiceException {

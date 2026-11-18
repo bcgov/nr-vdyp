@@ -129,7 +129,29 @@
           </div>
           <div class="card-info-item">
             <span class="card-info-label">Polygons</span>
-            <span v-if="projection.status === PROJECTION_STATUS.QUEUED" class="card-info-value">-</span>
+            <v-tooltip
+              v-if="hasPolygonEstimate(projection)"
+              :text="ADMIN_DASHBOARD_POLYGONS.ESTIMATE_TOOLTIP"
+              location="top"
+              max-width="320"
+            >
+              <template #activator="{ props: tooltipProps }">
+                <span
+                  class="card-info-value polygons-value polygons-estimate"
+                  tabindex="0"
+                  v-bind="tooltipProps"
+                >
+                  -
+                  <span class="polygons-total">
+                    / {{ formatNumber(projection.estimatedPolygonCount) }}
+                  </span>
+                </span>
+              </template>
+            </v-tooltip>
+            <span
+              v-else-if="projection.status === PROJECTION_STATUS.QUEUED"
+              class="card-info-value"
+            >-</span>
             <span v-else class="card-info-value polygons-value">
               {{ formatNumber(projection.completedPolygonCount) }}
               <span class="polygons-total">/ {{ formatNumber(projection.polygonCount) }}</span>
@@ -166,7 +188,8 @@
 <script setup lang="ts">
 import type { AdminProjection, SortOption } from '@/interfaces/interfaces'
 import { PROJECTION_STATUS } from '@/constants/constants'
-import { formatNumber } from '@/utils/util'
+import { ADMIN_DASHBOARD_POLYGONS } from '@/constants/message'
+import { formatNumber, hasPolygonEstimate } from '@/utils/util'
 import { AppButton } from '@/components'
 import { RunningIcon, StuckIcon14px, QueuedIcon14px, ArrowUpIcon, ArrowUpWhiteIcon } from '@/assets/'
 
@@ -394,6 +417,10 @@ const formatElapsedTime = (startDate: string | null): string => {
 .polygons-total {
   font: var(--typography-regular-small-body);
   color: var(--typography-color-secondary);
+}
+
+.polygons-estimate {
+  cursor: help;
 }
 
 .progress-cell {

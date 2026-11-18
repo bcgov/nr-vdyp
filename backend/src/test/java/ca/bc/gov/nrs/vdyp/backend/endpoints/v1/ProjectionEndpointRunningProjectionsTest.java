@@ -4,14 +4,21 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.is;
 
+import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.api.helpers.TestHelper;
+import ca.bc.gov.nrs.vdyp.backend.clients.COMSClient;
+import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.security.TestSecurity;
 
 @QuarkusTest
 class ProjectionEndpointRunningProjectionsTest {
+
+	@InjectMock
+	@RestClient
+	COMSClient comsClient;
 
 	@Test
 	@TestSecurity(user = "non-admin-test-user", roles = { "USER" })

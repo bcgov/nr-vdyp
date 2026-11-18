@@ -32,6 +32,9 @@ public class ProjectionModel {
 	// Only populated in the current user's projection list; null in all other responses
 	private Boolean hasPolygonFile;
 	private Boolean hasLayerFile;
+	// Only populated in the Admin Dashboard's running projections list; null in all other responses, and when the
+	// polygon file's row count was not recorded at upload
+	private Integer estimatedPolygonCount;
 
 	public String getProjectionGUID() {
 		return projectionGUID;
@@ -188,6 +191,14 @@ public class ProjectionModel {
 	public void setFilePresence(boolean hasPolygonFile, boolean hasLayerFile) {
 		this.hasPolygonFile = hasPolygonFile;
 		this.hasLayerFile = hasLayerFile;
+	}
+
+	public Integer getEstimatedPolygonCount() {
+		return estimatedPolygonCount;
+	}
+
+	public void setEstimatedPolygonCount(Integer estimatedPolygonCount) {
+		this.estimatedPolygonCount = estimatedPolygonCount;
 	}
 
 }

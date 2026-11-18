@@ -38,6 +38,9 @@ public class FileMappingEntity extends AuditableEntity {
 	@Column(name = "is_debug_mode_permitted", nullable = false)
 	private boolean isDebugModePermitted;
 
+	@Column(name = "estimated_polygon_count", nullable = true)
+	private Integer estimatedPolygonCount;
+
 	public UUID getFileMappingGUID() {
 		return fileMappingGUID;
 	}
@@ -76,5 +79,13 @@ public class FileMappingEntity extends AuditableEntity {
 
 	public void setDebugModePermitted(boolean debugModePermitted) {
 		this.isDebugModePermitted = debugModePermitted;
+	}
+
+	public Integer getEstimatedPolygonCount() {
+		return estimatedPolygonCount;
+	}
+
+	public void setEstimatedPolygonCount(Integer estimatedPolygonCount) {
+		this.estimatedPolygonCount = estimatedPolygonCount;
 	}
 }

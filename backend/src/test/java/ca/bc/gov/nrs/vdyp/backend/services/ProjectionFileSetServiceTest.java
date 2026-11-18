@@ -442,6 +442,18 @@ class ProjectionFileSetServiceTest {
 	}
 
 	@Test
+	void getEstimatedPolygonCountsForFileSets_delegatesToFileMappingService() {
+		List<UUID> fileSetGUIDs = List.of(UUID.randomUUID(), UUID.randomUUID());
+		Map<UUID, Integer> expected = Map.of(fileSetGUIDs.get(1), 77);
+		when(fileMappingService.getEstimatedPolygonCountsForFileSets(fileSetGUIDs)).thenReturn(expected);
+
+		Map<UUID, Integer> result = service.getEstimatedPolygonCountsForFileSets(fileSetGUIDs);
+
+		assertEquals(expected, result);
+		verify(fileMappingService).getEstimatedPolygonCountsForFileSets(fileSetGUIDs);
+	}
+
+	@Test
 	void duplicateFilesFromTo_callsFileMappingService() throws Exception {
 		UUID fromFileSetGuid = UUID.randomUUID();
 		UUID toFileSetGuid = UUID.randomUUID();

@@ -193,7 +193,22 @@
             </div>
           </td>
           <td class="table-cell">
-            <span v-if="projection.status === PROJECTION_STATUS.QUEUED">-</span>
+            <v-tooltip
+              v-if="hasPolygonEstimate(projection)"
+              :text="ADMIN_DASHBOARD_POLYGONS.ESTIMATE_TOOLTIP"
+              location="top"
+              max-width="320"
+            >
+              <template #activator="{ props: tooltipProps }">
+                <div class="polygons-cell polygons-estimate" tabindex="0" v-bind="tooltipProps">
+                  <span class="polygons-completed">-</span>
+                  <span class="polygons-total">
+                    / {{ formatNumber(projection.estimatedPolygonCount) }}
+                  </span>
+                </div>
+              </template>
+            </v-tooltip>
+            <span v-else-if="projection.status === PROJECTION_STATUS.QUEUED">-</span>
             <div v-else class="polygons-cell">
               <span class="polygons-completed">{{ formatNumber(projection.completedPolygonCount) }}</span>
               <span class="polygons-total">/ {{ formatNumber(projection.polygonCount) }}</span>
@@ -229,7 +244,8 @@
 import type { AdminProjection } from '@/interfaces/interfaces'
 import type { SortOrder } from '@/types/types'
 import { ADMIN_DASHBOARD_HEADER_KEY, SORT_ORDER, PROJECTION_STATUS } from '@/constants/constants'
-import { formatNumber } from '@/utils/util'
+import { ADMIN_DASHBOARD_POLYGONS } from '@/constants/message'
+import { formatNumber, hasPolygonEstimate } from '@/utils/util'
 import { AppButton } from '@/components'
 import { RunningIcon, StuckIcon14px, QueuedIcon14px, ArrowUpIcon, ArrowUpBlueIcon } from '@/assets/'
 
@@ -347,6 +363,10 @@ const formatElapsedTime = (startDate: string | null): string => {
 .polygons-total {
   font: var(--typography-regular-small-body);
   color: var(--typography-color-secondary);
+}
+
+.polygons-estimate {
+  cursor: help;
 }
 
 .cancel-button {

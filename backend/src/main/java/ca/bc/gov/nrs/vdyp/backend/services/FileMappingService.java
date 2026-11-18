@@ -11,6 +11,7 @@ import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -75,8 +76,11 @@ public class FileMappingService {
 		String fileSetTypeCode = projectionFileSetEntity.getFileSetTypeCode() == null ? null
 				: projectionFileSetEntity.getFileSetTypeCode().getCode();
 		ValidatedUpload upload = csvUploadValidator.validateMetadata(file.fileName(), file.contentType(), file.size());
-		// Polygon rows are counted while the upload is validated, stopping just past the Debug Mode limit
-		// since only "within" or "over" matters
+		// For a polygon file, count every row while the file is being uploaded.
+		// The count has two uses:
+		// 1. Debug Mode is only allowed for small files, so the count is checked against the Debug Mode limit.
+		// 2. The count is saved so the Admin Dashboard can show it as the estimated polygon count while the
+		// projection is queued.
 		boolean isPolygonFile = FileSetTypeCodeModel.POLYGON.equals(fileSetTypeCode);
 		int debugModeMaximumPolygons = debugModeConfig.maximumPolygons();
 		UUID objectGUID = null;
@@ -85,7 +89,7 @@ public class FileMappingService {
 			try (
 					InputStream source = Files.newInputStream(file.uploadedFile());
 					ValidatingInputStream fileStream = csvUploadValidator
-							.validatingStream(source, fileSetTypeCode, isPolygonFile ? debugModeMaximumPolygons + 1 : 0)
+							.validatingStream(source, fileSetTypeCode, isPolygonFile ? Integer.MAX_VALUE : 0)
 			) {
 				logger.debug(
 						"Data for object bucketId {}, contentDisposistion {}, contentLength {}, contentType {}",
@@ -105,7 +109,7 @@ public class FileMappingService {
 				// persist a record here for the file
 				return persistenceService.persistFileMapping(
 						objectGUID, projectionFileSetEntity.getProjectionFileSetGUID(), upload.filename(),
-						debugModePermitted
+						debugModePermitted, isPolygonFile ? polygonCount : null
 				);
 			}
 		} catch (CsvUploadValidationIOException e) {
@@ -174,6 +178,10 @@ public class FileMappingService {
 
 	public Set<UUID> getFileSetGUIDsWithFiles(Collection<UUID> fileSetGUIDs) {
 		return repository.findFileSetGUIDsWithFiles(fileSetGUIDs);
+	}
+
+	public Map<UUID, Integer> getEstimatedPolygonCountsForFileSets(Collection<UUID> fileSetGUIDs) {
+		return repository.findEstimatedPolygonCountsByFileSet(fileSetGUIDs);
 	}
 
 	private FileMappingModel getFileDetails(FileMappingEntity entity, boolean isDownload) {
@@ -256,7 +264,7 @@ public class FileMappingService {
 				objectGUID = UUID.fromString(comsObj.id());
 				return persistenceService.persistFileMapping(
 						objectGUID, fileSetEntity.getProjectionFileSetGUID(), file.getFilename(),
-						file.isDebugModePermitted()
+						file.isDebugModePermitted(), file.getEstimatedPolygonCount()
 				);
 			}
 		} catch (ProjectionServiceException e) {

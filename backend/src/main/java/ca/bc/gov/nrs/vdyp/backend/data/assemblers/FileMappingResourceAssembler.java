@@ -25,6 +25,7 @@ public class FileMappingResourceAssembler {
 		model.setComsObjectGUID(entity.getComsObjectGUID() == null ? null : entity.getComsObjectGUID().toString());
 		model.setFilename(entity.getFilename());
 		model.setDebugModePermitted(entity.isDebugModePermitted());
+		model.setEstimatedPolygonCount(entity.getEstimatedPolygonCount());
 		model.setProjectionFileSet(
 				entity.getProjectionFileSet() == null ? null : pfsra.toModel(entity.getProjectionFileSet())
 		);
@@ -44,6 +45,7 @@ public class FileMappingResourceAssembler {
 		entity.setComsObjectGUID(model.getComsObjectGUID() == null ? null : UUID.fromString(model.getComsObjectGUID()));
 		entity.setFilename(model.getFilename());
 		entity.setDebugModePermitted(model.isDebugModePermitted());
+		entity.setEstimatedPolygonCount(model.getEstimatedPolygonCount());
 		entity.setProjectionFileSet(
 				model.getProjectionFileSet() == null ? null : pfsra.toEntity(model.getProjectionFileSet())
 		);
