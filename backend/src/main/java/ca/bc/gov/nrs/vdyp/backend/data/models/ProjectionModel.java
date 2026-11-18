@@ -18,8 +18,6 @@ public class ProjectionModel {
 	private ProjectionFileSetModel resultFileSet;
 	private String projectionParameters;
 	private String modelParameters;
-	// Time the projection was last queued for batch processing
-	private OffsetDateTime queuedDate;
 	private OffsetDateTime startDate;
 	private OffsetDateTime endDate;
 	private CalculationEngineCodeModel calculationEngineCode;
@@ -37,6 +35,8 @@ public class ProjectionModel {
 	// Only populated in the Admin Dashboard's running projections list; null in all other responses, and when the
 	// polygon file's row count was not recorded at upload
 	private Integer estimatedPolygonCount;
+	// Time the projection was last queued for batch processing
+	private OffsetDateTime queuedDate;
 
 	public String getProjectionGUID() {
 		return projectionGUID;
@@ -64,10 +64,6 @@ public class ProjectionModel {
 
 	public String getModelParameters() {
 		return modelParameters;
-	}
-
-	public OffsetDateTime getQueuedDate() {
-		return queuedDate;
 	}
 
 	public OffsetDateTime getStartDate() {
@@ -136,10 +132,6 @@ public class ProjectionModel {
 
 	public void setModelParameters(String modelParameters) {
 		this.modelParameters = modelParameters;
-	}
-
-	public void setQueuedDate(OffsetDateTime queuedDate) {
-		this.queuedDate = queuedDate;
 	}
 
 	public void setStartDate(OffsetDateTime startDate) {
@@ -211,4 +203,11 @@ public class ProjectionModel {
 		this.estimatedPolygonCount = estimatedPolygonCount;
 	}
 
+	public OffsetDateTime getQueuedDate() {
+		return queuedDate;
+	}
+
+	public void setQueuedDate(OffsetDateTime queuedDate) {
+		this.queuedDate = queuedDate;
+	}
 }

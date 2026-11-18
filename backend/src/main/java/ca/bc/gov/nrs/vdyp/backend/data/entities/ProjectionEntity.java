@@ -43,8 +43,6 @@ public class ProjectionEntity extends AuditableEntity {
 	private String projectionParameters;
 	@Column(name = "model_parameters_json", length = 5000)
 	private String modelParameters;
-	@Column(name = "queued_date")
-	private OffsetDateTime queuedDate;
 	@Column(name = "start_date")
 	private OffsetDateTime startDate;
 	@Column(name = "end_date")
@@ -63,6 +61,9 @@ public class ProjectionEntity extends AuditableEntity {
 	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "projection_status_code", referencedColumnName = "projection_status_code")
 	private ProjectionStatusCodeEntity projectionStatusCode;
+
+	@Column(name = "queued_date")
+	private OffsetDateTime queuedDate;
 
 	public UUID getProjectionGUID() {
 		return projectionGUID;
@@ -90,10 +91,6 @@ public class ProjectionEntity extends AuditableEntity {
 
 	public String getModelParameters() {
 		return modelParameters;
-	}
-
-	public OffsetDateTime getQueuedDate() {
-		return queuedDate;
 	}
 
 	public OffsetDateTime getStartDate() {
@@ -152,10 +149,6 @@ public class ProjectionEntity extends AuditableEntity {
 		this.modelParameters = modelParameters;
 	}
 
-	public void setQueuedDate(OffsetDateTime queuedDate) {
-		this.queuedDate = queuedDate;
-	}
-
 	public void setStartDate(OffsetDateTime startDate) {
 		this.startDate = startDate;
 	}
@@ -182,5 +175,13 @@ public class ProjectionEntity extends AuditableEntity {
 
 	public void setAdminCancelReason(String adminCancelReason) {
 		this.adminCancelReason = adminCancelReason;
+	}
+
+	public OffsetDateTime getQueuedDate() {
+		return queuedDate;
+	}
+
+	public void setQueuedDate(OffsetDateTime queuedDate) {
+		this.queuedDate = queuedDate;
 	}
 }
