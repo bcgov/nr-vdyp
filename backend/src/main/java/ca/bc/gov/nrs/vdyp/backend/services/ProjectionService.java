@@ -623,6 +623,9 @@ public class ProjectionService {
 		);
 		batchJobPublisher.publish(request);
 		entity.setProjectionStatusCode(statusLookup.requireEntity(ProjectionStatusCodeModel.QUEUED));
+		entity.setQueuedDate(OffsetDateTime.now(ZoneOffset.UTC));
+		// Clear the previous run's start date; it is set again when the job starts running
+		entity.setStartDate(null);
 
 		return toModelWithExpiry(entity);
 	}

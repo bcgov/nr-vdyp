@@ -97,11 +97,28 @@
           </div>
           <div class="card-info-item">
             <span class="card-info-label">Elapsed</span>
+            <v-tooltip
+              v-if="projection.status === PROJECTION_STATUS.QUEUED"
+              :text="ADMIN_DASHBOARD_ELAPSED.QUEUE_WAIT_TOOLTIP"
+              location="top"
+              max-width="320"
+            >
+              <template #activator="{ props: tooltipProps }">
+                <span
+                  class="card-info-value elapsed-queue-wait"
+                  tabindex="0"
+                  v-bind="tooltipProps"
+                >
+                  {{ formatElapsedTime(getElapsedStartDate(projection), now) }}
+                </span>
+              </template>
+            </v-tooltip>
             <span
+              v-else
               class="card-info-value"
               :class="{ 'elapsed-stuck': projection.status === PROJECTION_STATUS.STUCK }"
             >
-              {{ formatElapsedTime(projection.startDate) }}
+              {{ formatElapsedTime(getElapsedStartDate(projection), now) }}
             </span>
           </div>
           <div class="card-info-item">
@@ -188,8 +205,13 @@
 <script setup lang="ts">
 import type { AdminProjection, SortOption } from '@/interfaces/interfaces'
 import { PROJECTION_STATUS } from '@/constants/constants'
-import { ADMIN_DASHBOARD_POLYGONS } from '@/constants/message'
-import { formatNumber, hasPolygonEstimate } from '@/utils/util'
+import { ADMIN_DASHBOARD_ELAPSED, ADMIN_DASHBOARD_POLYGONS } from '@/constants/message'
+import {
+  formatElapsedTime,
+  formatNumber,
+  getElapsedStartDate,
+  hasPolygonEstimate,
+} from '@/utils/util'
 import { AppButton } from '@/components'
 import { RunningIcon, StuckIcon14px, QueuedIcon14px, ArrowUpIcon, ArrowUpWhiteIcon } from '@/assets/'
 
@@ -200,7 +222,7 @@ interface Props {
   now: number
 }
 
-const props = defineProps<Props>()
+defineProps<Props>()
 
 const emit = defineEmits<{
   (e: 'sort', value: string): void
@@ -218,19 +240,6 @@ const getProgressPercent = (projection: AdminProjection): number => {
     100,
     Math.round((projection.completedPolygonCount / projection.polygonCount) * 100),
   )
-}
-
-const formatElapsedTime = (startDate: string | null): string => {
-  if (!startDate) return '-'
-  const startMs = new Date(startDate).getTime()
-  if (Number.isNaN(startMs)) return '-'
-
-  const elapsedSeconds = Math.max(0, Math.floor((props.now - startMs) / 1000))
-  const hours = Math.floor(elapsedSeconds / 3600)
-  const minutes = Math.floor((elapsedSeconds % 3600) / 60)
-  const seconds = elapsedSeconds % 60
-  const pad = (n: number) => n.toString().padStart(2, '0')
-  return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`
 }
 </script>
 
@@ -419,7 +428,8 @@ const formatElapsedTime = (startDate: string | null): string => {
   color: var(--typography-color-secondary);
 }
 
-.polygons-estimate {
+.polygons-estimate,
+.elapsed-queue-wait {
   cursor: help;
 }
 

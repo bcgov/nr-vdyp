@@ -26,6 +26,9 @@ import {
   numEq,
   strEq,
   hasPolygonEstimate,
+  getElapsedStartDate,
+  getElapsedMs,
+  formatElapsedTime,
 } from '@/utils/util'
 import JSZip from 'jszip'
 import { CONSTANTS } from '@/constants'
@@ -389,6 +392,29 @@ describe('Util Functions Unit Tests', () => {
       assert.isFalse(hasPolygonEstimate({ status: QUEUED, estimatedPolygonCount: null }))
       assert.isFalse(hasPolygonEstimate({ status: RUNNING, estimatedPolygonCount: 100 }))
       assert.isFalse(hasPolygonEstimate({ status: STUCK, estimatedPolygonCount: 100 }))
+    })
+  })
+
+  describe('elapsed time helpers', () => {
+    const now = Date.parse('2026-01-10T15:00:00Z')
+
+    it('getElapsedStartDate uses queuedDate for queued, startDate otherwise', () => {
+      const { QUEUED, RUNNING } = CONSTANTS.PROJECTION_STATUS
+      const queuedDate = '2026-01-10T14:00:00Z'
+      const startDate = '2026-01-10T14:30:00Z'
+      assert.equal(getElapsedStartDate({ status: QUEUED, queuedDate, startDate }), queuedDate)
+      assert.equal(getElapsedStartDate({ status: RUNNING, queuedDate, startDate }), startDate)
+    })
+
+    it('getElapsedMs returns elapsed ms, 0 for future dates and null for invalid dates', () => {
+      assert.equal(getElapsedMs('2026-01-10T14:59:00Z', now), 60_000)
+      assert.equal(getElapsedMs('2026-01-10T15:00:05Z', now), 0)
+      assert.isNull(getElapsedMs(null, now))
+    })
+
+    it('formatElapsedTime formats as HH:MM:SS and returns "-" for invalid dates', () => {
+      assert.equal(formatElapsedTime('2026-01-09T13:57:51Z', now), '25:02:09')
+      assert.equal(formatElapsedTime(null, now), '-')
     })
   })
 })

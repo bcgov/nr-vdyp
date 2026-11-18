@@ -29,6 +29,7 @@ describe('AdminProjectionCardList.vue', () => {
     title: 'Test Projection',
     ownerDisplayName: 'R. MacLeod',
     userType: 'IDIR',
+    queuedDate: '2026-01-10T14:00:00Z',
     startDate: '2026-01-10T14:30:00Z',
     status: 'Running',
     workerCount: 16,
@@ -42,9 +43,10 @@ describe('AdminProjectionCardList.vue', () => {
   const mountComponent = (
     projections: AdminProjection[] = [createProjection()],
     eventHandlers: Record<string, Cypress.Agent<sinon.SinonSpy>> = {},
+    now: number = Date.now(),
   ) => {
     return mount(AdminProjectionCardList, {
-      props: { projections, sortOptions, sortValue: 'workerCount-desc', now: Date.now() },
+      props: { projections, sortOptions, sortValue: 'workerCount-desc', now },
       global: { plugins: [vuetify] },
       attrs: eventHandlers,
     })
@@ -96,7 +98,7 @@ describe('AdminProjectionCardList.vue', () => {
 
   it('shows the Queued badge and placeholder values for queued projections', () => {
     mountComponent([
-      createProjection({ status: 'Queued', startDate: null, workerCount: 0 }),
+      createProjection({ status: 'Queued', queuedDate: null, startDate: null, workerCount: 0 }),
     ])
 
     cy.get('.status-badge').should('contain.text', 'Queued')
@@ -117,5 +119,27 @@ describe('AdminProjectionCardList.vue', () => {
       .should('have.class', 'polygons-estimate')
       .find('.polygons-total')
       .should('contain.text', `/ ${(12345).toLocaleString()}`)
+  })
+
+  it('shows the queue wait time and its tooltip for queued projections', () => {
+    mountComponent(
+      [
+        createProjection({
+          status: 'Queued',
+          queuedDate: '2026-01-10T14:00:00Z',
+          startDate: '2026-01-01T00:00:00Z',
+          workerCount: 0,
+        }),
+      ],
+      {},
+      Date.parse('2026-01-10T16:05:09Z'),
+    )
+
+    cy.get('.card-info-value')
+      .eq(2)
+      .should('have.class', 'elapsed-queue-wait')
+      .and('contain.text', '02:05:09')
+      .trigger('mouseenter')
+    cy.get('.v-tooltip').should('contain.text', 'waiting in the queue prior to resource allocation')
   })
 })

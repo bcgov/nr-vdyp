@@ -83,6 +83,7 @@ export interface AdminProjection {
   title: string
   ownerDisplayName: string
   userType: UserTypeCode | null
+  queuedDate: string | null
   startDate: string | null
   status: ProjectionStatus
   workerCount: number

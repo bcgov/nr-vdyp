@@ -18,6 +18,8 @@ public class ProjectionModel {
 	private ProjectionFileSetModel resultFileSet;
 	private String projectionParameters;
 	private String modelParameters;
+	// Time the projection was last queued for batch processing
+	private OffsetDateTime queuedDate;
 	private OffsetDateTime startDate;
 	private OffsetDateTime endDate;
 	private CalculationEngineCodeModel calculationEngineCode;
@@ -62,6 +64,10 @@ public class ProjectionModel {
 
 	public String getModelParameters() {
 		return modelParameters;
+	}
+
+	public OffsetDateTime getQueuedDate() {
+		return queuedDate;
 	}
 
 	public OffsetDateTime getStartDate() {
@@ -130,6 +136,10 @@ public class ProjectionModel {
 
 	public void setModelParameters(String modelParameters) {
 		this.modelParameters = modelParameters;
+	}
+
+	public void setQueuedDate(OffsetDateTime queuedDate) {
+		this.queuedDate = queuedDate;
 	}
 
 	public void setStartDate(OffsetDateTime startDate) {

@@ -1012,6 +1012,32 @@
           }
         ]
       }
+    },
+    {
+      "changeSet": {
+        "id": "01_00_25_00",
+        "author": "rjeong",
+        "changes": [
+          {
+            "tagDatabase": {
+              "tag": "version_01_00_25_00"
+            }
+          },
+          {
+            "sqlFile": {
+              "dbms": "postgresql",
+              "endDelimiter": ";",
+              "path": "scripts/01_00_25/00/ddl/tables/app-vdyp.projection.sql",
+              "relativeToChangelogFile": true
+            }
+          }
+        ],
+        "rollback": [
+          {
+            "sql": "ALTER TABLE \"app-vdyp\".\"projection\" DROP COLUMN IF EXISTS \"queued_date\""
+          }
+        ]
+      }
     }
   ]
 }

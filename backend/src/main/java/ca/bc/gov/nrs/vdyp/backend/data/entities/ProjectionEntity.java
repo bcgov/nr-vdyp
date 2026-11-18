@@ -43,6 +43,8 @@ public class ProjectionEntity extends AuditableEntity {
 	private String projectionParameters;
 	@Column(name = "model_parameters_json", length = 5000)
 	private String modelParameters;
+	@Column(name = "queued_date")
+	private OffsetDateTime queuedDate;
 	@Column(name = "start_date")
 	private OffsetDateTime startDate;
 	@Column(name = "end_date")
@@ -88,6 +90,10 @@ public class ProjectionEntity extends AuditableEntity {
 
 	public String getModelParameters() {
 		return modelParameters;
+	}
+
+	public OffsetDateTime getQueuedDate() {
+		return queuedDate;
 	}
 
 	public OffsetDateTime getStartDate() {
@@ -144,6 +150,10 @@ public class ProjectionEntity extends AuditableEntity {
 
 	public void setModelParameters(String modelParameters) {
 		this.modelParameters = modelParameters;
+	}
+
+	public void setQueuedDate(OffsetDateTime queuedDate) {
+		this.queuedDate = queuedDate;
 	}
 
 	public void setStartDate(OffsetDateTime startDate) {

@@ -72,6 +72,7 @@ export interface ProjectionModel {
   resultFileSet: ProjectionFileSetModel
   projectionParameters: string
   modelParameters: string | null
+  queuedDate?: string | null
   startDate: string | null
   endDate: string | null
   calculationEngineCode: CalculationEngineCodeModel

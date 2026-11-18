@@ -1818,6 +1818,7 @@ class ProjectionServiceTest {
 		entity.setPolygonFileSet(fileSetEntity(polygonFileSetGUID));
 		entity.setLayerFileSet(fileSetEntity(layerFileSetGUID));
 		entity.setProjectionParameters("{\"ageStart\":0,\"ageEnd\":100,\"ageIncrement\":10}");
+		entity.setStartDate(OffsetDateTime.now().minusDays(1));
 
 		when(repository.findByIdOptional(projectionGUID)).thenReturn(Optional.of(entity));
 		when(fileSetService.getAllFiles(polygonFileSetGUID, actingUser, false)).thenReturn(List.of(polygonFileModel));
@@ -1828,6 +1829,8 @@ class ProjectionServiceTest {
 		when(expiryConfig.expiryFrom(any())).thenReturn(OffsetDateTime.now());
 		ProjectionModel model = service.queueForBatchProjection(actingUser, projectionGUID);
 		assertEquals(ProjectionStatusCodeModel.QUEUED, model.getProjectionStatusCode().getCode());
+		assertNotNull(model.getQueuedDate());
+		assertNull(model.getStartDate());
 		verify(batchMappingService, times(1)).deleteMappingsForProjection(entity);
 	}
 
