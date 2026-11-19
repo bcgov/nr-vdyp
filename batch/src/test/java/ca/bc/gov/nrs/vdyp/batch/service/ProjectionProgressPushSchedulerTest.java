@@ -38,8 +38,10 @@ import org.springframework.web.client.HttpClientErrorException;
 
 import ca.bc.gov.nrs.vdyp.batch.client.vdyp.VdypClient;
 import ca.bc.gov.nrs.vdyp.batch.model.VDYPProjectionProgressUpdate;
+import ca.bc.gov.nrs.vdyp.batch.util.AlertCountsContext;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchUtils;
+import ca.bc.gov.nrs.vdyp.ecore.projection.AlertCounts;
 
 @ExtendWith(MockitoExtension.class)
 class ProjectionProgressPushSchedulerTest {
@@ -387,6 +389,44 @@ class ProjectionProgressPushSchedulerTest {
 		verify(vdypClient).pushProgress(eq(projectionGuid), payloadCaptor.capture());
 		assertEquals(10, payloadCaptor.getValue().totalPolygons());
 		assertEquals(7, payloadCaptor.getValue().polygonsProcessed());
+	}
+
+	@Test
+	void pushProgress_alertCounts_addsBaselineAndRunningWorkerSteps() {
+		var params = new HashMap<String, JobParameter<?>>();
+		String projectionGuid = java.util.UUID.randomUUID().toString();
+		String batchJobGuid = java.util.UUID.randomUUID().toString();
+
+		params.put(BatchConstants.GuidInput.PROJECTION_GUID, new JobParameter<>(projectionGuid, String.class, true));
+		params.put(BatchConstants.Job.GUID, new JobParameter<>(batchJobGuid, String.class, true));
+		JobParameters jobParameters = new JobParameters(params);
+		JobInstance jobInstance = new JobInstance(1L, "VdypFetchAndPartitionJob");
+
+		JobExecution execution = new JobExecution(jobInstance, 2L, jobParameters);
+		ExecutionContext jobCtx = new ExecutionContext();
+		jobCtx.putInt(BatchConstants.Job.PREVIOUS_TOTAL_POLYGONS, 10);
+		AlertCountsContext
+				.write(jobCtx, BatchConstants.Job.PREVIOUS_ALERT_COUNTS_PREFIX, new AlertCounts(1, 1, 2, 2, 3, 3));
+		execution.setExecutionContext(jobCtx);
+
+		StepExecution workerStep = execution.createStepExecution(BatchConstants.Job.WORKER_STEP_NAME + ":partition0");
+		AlertCountsContext.write(
+				workerStep.getExecutionContext(), BatchConstants.Job.ALERT_COUNTS_PREFIX,
+				new AlertCounts(10, 5, 20, 10, 30, 15)
+		);
+
+		when(taskExecutor.getThreadPoolExecutor().getQueue().remainingCapacity()).thenReturn(1);
+		when(jobExplorer.findRunningJobExecutions("VdypFetchAndPartitionJob")).thenReturn(Set.of(execution));
+		ArgumentCaptor<Runnable> runnableCaptor = ArgumentCaptor.forClass(Runnable.class);
+		ArgumentCaptor<VDYPProjectionProgressUpdate> payloadCaptor = ArgumentCaptor
+				.forClass(VDYPProjectionProgressUpdate.class);
+
+		scheduler.pushProgress();
+		verify(taskExecutor).execute(runnableCaptor.capture());
+		runnableCaptor.getValue().run();
+
+		verify(vdypClient).pushProgress(eq(projectionGuid), payloadCaptor.capture());
+		assertEquals(new AlertCounts(11, 6, 22, 12, 33, 18), payloadCaptor.getValue().alertCounts());
 	}
 
 }

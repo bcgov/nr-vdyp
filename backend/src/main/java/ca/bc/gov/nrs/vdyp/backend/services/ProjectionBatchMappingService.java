@@ -236,6 +236,11 @@ public class ProjectionBatchMappingService {
 
 		entity.setPolygonCount(progressUpdate.totalPolygons());
 		entity.setErrorCount(progressUpdate.projectionErrors());
+		// Some updates do not include alert counts (e.g. the one sent while input files are being downloaded).
+		// In that case, leave the stored alert counts as they are.
+		if (progressUpdate.alertCounts() != null) {
+			entity.setAlertCounts(progressUpdate.alertCounts());
+		}
 		// Polygons whose chunk failed and was skipped are folded into the displayed "completed" count so that
 		// completed reconciles to total once the job finishes, rather than silently under-reporting.
 		entity.setCompletedPolygonCount(newCompletedPolygonCount);

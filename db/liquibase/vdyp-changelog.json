@@ -1038,6 +1038,32 @@
           }
         ]
       }
+    },
+    {
+      "changeSet": {
+        "id": "01_00_26_00",
+        "author": "rjeong",
+        "changes": [
+          {
+            "tagDatabase": {
+              "tag": "version_01_00_26_00"
+            }
+          },
+          {
+            "sqlFile": {
+              "dbms": "postgresql",
+              "endDelimiter": ";",
+              "path": "scripts/01_00_26/00/ddl/tables/app-vdyp.projection_batch_mapping.sql",
+              "relativeToChangelogFile": true
+            }
+          }
+        ],
+        "rollback": [
+          {
+            "sql": "ALTER TABLE \"app-vdyp\".\"projection_batch_mapping\" DROP COLUMN IF EXISTS \"error_message_count\", DROP COLUMN IF EXISTS \"error_polygon_count\", DROP COLUMN IF EXISTS \"warning_message_count\", DROP COLUMN IF EXISTS \"warning_polygon_count\", DROP COLUMN IF EXISTS \"info_message_count\", DROP COLUMN IF EXISTS \"info_polygon_count\""
+          }
+        ]
+      }
     }
   ]
 }

@@ -16,6 +16,7 @@ import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.models.BatchFailureTypeCodeModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionBatchMappingModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionModel;
+import ca.bc.gov.nrs.vdyp.ecore.projection.AlertCounts;
 
 class TestProjectionBatchMappingResourceAssembler {
 	@Test
@@ -93,6 +94,7 @@ class TestProjectionBatchMappingResourceAssembler {
 		private Integer errorCount;
 		private String batchFailureTypeCode;
 		private String failureMessage;
+		private final AlertCounts alertCounts = new AlertCounts(892, 200, 1200, 600, 2000, 1500);
 
 		public static TestProjectionBatchMappingResourceAssembler.ProjectionBatchMappingTestData builder() {
 			return new TestProjectionBatchMappingResourceAssembler.ProjectionBatchMappingTestData();
@@ -165,6 +167,7 @@ class TestProjectionBatchMappingResourceAssembler {
 			data.setCompletedPolygonCount(completedPartitionCount);
 			data.setWarningCount(warningCount);
 			data.setErrorCount(errorCount);
+			data.setAlertCounts(alertCounts);
 			if (batchFailureTypeCode != null) {
 				BatchFailureTypeCodeEntity batchFailureType = new BatchFailureTypeCodeEntity();
 				batchFailureType.setCode(batchFailureTypeCode);
@@ -190,6 +193,12 @@ class TestProjectionBatchMappingResourceAssembler {
 			data.setCompletedPolygonCount(completedPartitionCount);
 			data.setWarningCount(warningCount);
 			data.setErrorCount(errorCount);
+			data.setErrorMessageCount(alertCounts.errorMessageCount());
+			data.setErrorPolygonCount(alertCounts.errorPolygonCount());
+			data.setWarningMessageCount(alertCounts.warningMessageCount());
+			data.setWarningPolygonCount(alertCounts.warningPolygonCount());
+			data.setInfoMessageCount(alertCounts.infoMessageCount());
+			data.setInfoPolygonCount(alertCounts.infoPolygonCount());
 			if (batchFailureTypeCode != null) {
 				BatchFailureTypeCodeModel batchFailureType = new BatchFailureTypeCodeModel();
 				batchFailureType.setCode(batchFailureTypeCode);

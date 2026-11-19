@@ -19,6 +19,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -33,6 +34,7 @@ import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.YieldTableGenerationException;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters.ExecutionOption;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ProjectionRequestKind;
+import ca.bc.gov.nrs.vdyp.ecore.projection.AlertCounts.AlertType;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Polygon;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ProjectionTypeCode;
 import ca.bc.gov.nrs.vdyp.ecore.projection.output.IMessageLog;
@@ -62,6 +64,8 @@ public class ProjectionContext {
 
 	private final IMessageLog progressLog;
 	private int errorLogCount;
+	private final int[] alertMessageCounts = new int[AlertType.values().length];
+	private final int[] alertPolygonCounts = new int[AlertType.values().length];
 	private final IMessageLog errorLog;
 	private List<YieldTable> yieldTableList = new ArrayList<>();
 
@@ -334,6 +338,26 @@ public class ProjectionContext {
 	public void logError(String message, Object... args) {
 		errorLogCount++;
 		errorLog.addMessage(message, args);
+	}
+
+	public void logAlert(AlertType alertType, String message) {
+		logError(message);
+		alertMessageCounts[alertType.ordinal()]++;
+	}
+
+	/** Called once per polygon: adds 1 to the polygon count of each alert type the polygon had. */
+	public void recordPolygonAlertTypes(Set<AlertType> alertTypes) {
+		for (AlertType alertType : alertTypes) {
+			alertPolygonCounts[alertType.ordinal()]++;
+		}
+	}
+
+	public AlertCounts getAlertCounts() {
+		return new AlertCounts(
+				alertMessageCounts[AlertType.ERROR.ordinal()], alertPolygonCounts[AlertType.ERROR.ordinal()],
+				alertMessageCounts[AlertType.WARNING.ordinal()], alertPolygonCounts[AlertType.WARNING.ordinal()],
+				alertMessageCounts[AlertType.INFO.ordinal()], alertPolygonCounts[AlertType.INFO.ordinal()]
+		);
 	}
 
 	public InputStream getErrorLogStream() {

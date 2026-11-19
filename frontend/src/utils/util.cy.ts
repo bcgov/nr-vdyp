@@ -29,6 +29,8 @@ import {
   getElapsedStartDate,
   getElapsedMs,
   formatElapsedTime,
+  getAlertCounts,
+  buildAlertCountTooltipLines,
 } from '@/utils/util'
 import JSZip from 'jszip'
 import { CONSTANTS } from '@/constants'
@@ -111,8 +113,8 @@ describe('Util Functions Unit Tests', () => {
     })
 
     it('should return null for an invalid timestamp', () => {
-      expect(getDateTimeParts('')).to.be.null
-      expect(getDateTimeParts('not a date')).to.be.null
+      assert.isNull(getDateTimeParts(''))
+      assert.isNull(getDateTimeParts('not a date'))
     })
   })
 
@@ -381,6 +383,66 @@ describe('Util Functions Unit Tests', () => {
       addExecutionOptionsFromMappings(selected, excluded, [])
       assert.isEmpty(selected)
       assert.isEmpty(excluded)
+    })
+  })
+
+  describe('getAlertCounts', () => {
+    const baseMapping = {
+      projectionBatchMappingGUID: 'mapping-guid',
+      batchJobGUID: 'job-guid',
+      polygonCount: 10,
+      completedPolygonCount: 10,
+      errorCount: 6,
+      warningCount: 0,
+    }
+
+    it('should return null when there is no batch mapping', () => {
+      assert.isNull(getAlertCounts(null))
+      assert.isNull(getAlertCounts(undefined))
+    })
+
+    it('should copy the alert breakdown from the batch mapping', () => {
+      expect(
+        getAlertCounts({
+          ...baseMapping,
+          errorMessageCount: 1,
+          errorPolygonCount: 2,
+          warningMessageCount: 3,
+          warningPolygonCount: 4,
+          infoMessageCount: 5,
+          infoPolygonCount: 6,
+        }),
+      ).to.deep.equal({
+        errorMessageCount: 1,
+        errorPolygonCount: 2,
+        warningMessageCount: 3,
+        warningPolygonCount: 4,
+        infoMessageCount: 5,
+        infoPolygonCount: 6,
+      })
+    })
+
+    it('should return null for a projection run before the breakdown was recorded', () => {
+      assert.isNull(getAlertCounts(baseMapping))
+    })
+  })
+
+  describe('buildAlertCountTooltipLines', () => {
+    it('should build one line per alert type with thousands separators', () => {
+      expect(
+        buildAlertCountTooltipLines({
+          errorMessageCount: 892,
+          errorPolygonCount: 200,
+          warningMessageCount: 1200,
+          warningPolygonCount: 600,
+          infoMessageCount: 2000,
+          infoPolygonCount: 1500,
+        }),
+      ).to.deep.equal([
+        'Errors: 892 (200 Polygons)',
+        'Warnings: 1,200 (600 Polygons)',
+        'Info Messages: 2,000 (1,500 Polygons)',
+      ])
     })
   })
 

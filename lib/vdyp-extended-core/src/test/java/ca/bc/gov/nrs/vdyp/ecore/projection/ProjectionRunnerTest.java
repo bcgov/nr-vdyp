@@ -48,6 +48,7 @@ public class ProjectionRunnerTest {
 				);
 				assertEquals("", new String(runner.getErrorStream().readAllBytes()));
 				assertEquals(0, runner.getErrorLogCount());
+				assertEquals(AlertCounts.NONE, runner.getAlertCounts());
 			}
 		}
 	}
@@ -102,6 +103,7 @@ public class ProjectionRunnerTest {
 			String errors = new String(runner.getErrorStream().readAllBytes());
 			assertEquals(skipped, runner.getLastRunPolygonsSkipped(), errors);
 			assertEquals(processed, runner.getLastRunPolygonsProcessed(), errors);
+			assertAlertCountsMatchErrorLog(runner, errors);
 			for (int i = 0; i < layers.length(); i++) {
 				String prefix = "Polygon " + (13919428L + i) + " Layer 1";
 				assertEquals(
@@ -163,6 +165,8 @@ public class ProjectionRunnerTest {
 			assertEquals(rows.length(), runner.getLastRunPolygonsSeen());
 			assertEquals(invalidCount, runner.getLastRunPolygonsSkipped());
 			assertEquals(rows.length() - invalidCount, runner.getLastRunPolygonsProcessed());
+			assertAlertCountsMatchErrorLog(runner, errors);
+			assertEquals(invalidCount, runner.getAlertCounts().errorPolygonCount(), errors);
 			for (int i = 0; i < rows.length(); i++) {
 				String prefix = "Polygon " + (13919428L + i);
 				assertEquals(
@@ -203,6 +207,7 @@ public class ProjectionRunnerTest {
 			assertThat(errors, containsString("has already been supplied"));
 			assertEquals(2, runner.getErrorLogCount(), errors);
 			assertEquals(1, runner.getLastRunPolygonsSkipped());
+			assertEquals(new AlertCounts(2, 1, 0, 0, 0, 0), runner.getAlertCounts(), errors);
 		}
 	}
 
@@ -228,7 +233,16 @@ public class ProjectionRunnerTest {
 			assertThat(errors, containsString("Feature ID"));
 			assertEquals(1, runner.getErrorLogCount());
 			assertEquals(1, runner.getLastRunPolygonsSkipped());
+			assertEquals(new AlertCounts(1, 1, 0, 0, 0, 0), runner.getAlertCounts(), errors);
 		}
+	}
+
+	private static void assertAlertCountsMatchErrorLog(ProjectionRunner runner, String errors) {
+		AlertCounts counts = runner.getAlertCounts();
+		assertEquals(
+				runner.getErrorLogCount(),
+				counts.errorMessageCount() + counts.warningMessageCount() + counts.infoMessageCount(), errors
+		);
 	}
 
 	private static Parameters validationLoggingParameters() {
@@ -265,6 +279,7 @@ public class ProjectionRunnerTest {
 			assertThat(errors, containsString(expectedContext));
 			assertEquals(1, runner.getErrorLogCount(), errors);
 			assertEquals(0, runner.getLastRunPolygonsSeen());
+			assertEquals(new AlertCounts(1, 0, 0, 0, 0, 0), runner.getAlertCounts(), errors);
 		}
 	}
 

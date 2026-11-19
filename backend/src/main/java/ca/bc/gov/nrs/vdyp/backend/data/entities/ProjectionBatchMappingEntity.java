@@ -5,6 +5,8 @@ import java.util.UUID;
 
 import org.hibernate.annotations.UuidGenerator;
 
+import ca.bc.gov.nrs.vdyp.ecore.projection.AlertCounts;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -40,6 +42,18 @@ public class ProjectionBatchMappingEntity extends AuditableEntity {
 	private Integer errorCount;
 	@Column(name = "warning_count")
 	private Integer warningCount;
+	@Column(name = "error_message_count", nullable = false)
+	private int errorMessageCount;
+	@Column(name = "error_polygon_count", nullable = false)
+	private int errorPolygonCount;
+	@Column(name = "warning_message_count", nullable = false)
+	private int warningMessageCount;
+	@Column(name = "warning_polygon_count", nullable = false)
+	private int warningPolygonCount;
+	@Column(name = "info_message_count", nullable = false)
+	private int infoMessageCount;
+	@Column(name = "info_polygon_count", nullable = false)
+	private int infoPolygonCount;
 	@Column(name = "worker_count")
 	private Integer workerCount;
 	@Column(name = "is_prioritized", nullable = false)
@@ -149,6 +163,63 @@ public class ProjectionBatchMappingEntity extends AuditableEntity {
 
 	public void setLastProgressTime(OffsetDateTime lastProgressTime) {
 		this.lastProgressTime = lastProgressTime;
+	}
+
+	public int getErrorMessageCount() {
+		return errorMessageCount;
+	}
+
+	public void setErrorMessageCount(int errorMessageCount) {
+		this.errorMessageCount = errorMessageCount;
+	}
+
+	public int getErrorPolygonCount() {
+		return errorPolygonCount;
+	}
+
+	public void setErrorPolygonCount(int errorPolygonCount) {
+		this.errorPolygonCount = errorPolygonCount;
+	}
+
+	public int getWarningMessageCount() {
+		return warningMessageCount;
+	}
+
+	public void setWarningMessageCount(int warningMessageCount) {
+		this.warningMessageCount = warningMessageCount;
+	}
+
+	public int getWarningPolygonCount() {
+		return warningPolygonCount;
+	}
+
+	public void setWarningPolygonCount(int warningPolygonCount) {
+		this.warningPolygonCount = warningPolygonCount;
+	}
+
+	public int getInfoMessageCount() {
+		return infoMessageCount;
+	}
+
+	public void setInfoMessageCount(int infoMessageCount) {
+		this.infoMessageCount = infoMessageCount;
+	}
+
+	public int getInfoPolygonCount() {
+		return infoPolygonCount;
+	}
+
+	public void setInfoPolygonCount(int infoPolygonCount) {
+		this.infoPolygonCount = infoPolygonCount;
+	}
+
+	public void setAlertCounts(AlertCounts alertCounts) {
+		this.errorMessageCount = alertCounts.errorMessageCount();
+		this.errorPolygonCount = alertCounts.errorPolygonCount();
+		this.warningMessageCount = alertCounts.warningMessageCount();
+		this.warningPolygonCount = alertCounts.warningPolygonCount();
+		this.infoMessageCount = alertCounts.infoMessageCount();
+		this.infoPolygonCount = alertCounts.infoPolygonCount();
 	}
 
 }

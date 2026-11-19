@@ -30,6 +30,7 @@ import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.item.ExecutionContext;
 
 import ca.bc.gov.nrs.vdyp.batch.model.VDYPProjectionProgressUpdate;
+import ca.bc.gov.nrs.vdyp.ecore.projection.AlertCounts;
 import ca.bc.gov.nrs.vdyp.ecore.utils.CsvRecordBeanHelper;
 
 public final class BatchUtils {
@@ -314,7 +315,9 @@ public final class BatchUtils {
 		return isRunning ? calculateActiveWorkers(job, true) + 1 : 0;
 	}
 
-	private record WorkerStepProgress(int polygonsProcessed, int errorCount, int polygonsSkipped) {
+	private record WorkerStepProgress(
+			int polygonsProcessed, int errorCount, int polygonsSkipped, AlertCounts alertCounts
+	) {
 		int total() {
 			return polygonsProcessed + errorCount + polygonsSkipped;
 		}
@@ -325,7 +328,8 @@ public final class BatchUtils {
 		return new WorkerStepProgress(
 				stepCtx.getInt(BatchConstants.Job.POLYGONS_PROCESSED, 0),
 				stepCtx.getInt(BatchConstants.Job.PROJECTION_ERRORS, 0),
-				stepCtx.getInt(BatchConstants.Job.POLYGONS_SKIPPED, 0)
+				stepCtx.getInt(BatchConstants.Job.POLYGONS_SKIPPED, 0),
+				AlertCountsContext.read(stepCtx, BatchConstants.Job.ALERT_COUNTS_PREFIX)
 		);
 	}
 
@@ -361,10 +365,12 @@ public final class BatchUtils {
 		int polygonsProcessed = 0;
 		int errorCount = 0;
 		int polygonsSkipped = 0;
+		AlertCounts alertCounts = AlertCounts.NONE;
 		for (WorkerStepProgress progress : bestProgressByWorkerStep.values()) {
 			polygonsProcessed += progress.polygonsProcessed();
 			errorCount += progress.errorCount();
 			polygonsSkipped += progress.polygonsSkipped();
+			alertCounts = alertCounts.plus(progress.alertCounts());
 		}
 
 		ExecutionContext jobContext = jobExecution.getExecutionContext();
@@ -372,6 +378,7 @@ public final class BatchUtils {
 		jobContext.putInt(BatchConstants.Job.PREVIOUS_POLYGONS_PROCESSED, polygonsProcessed);
 		jobContext.putInt(BatchConstants.Job.PREVIOUS_PROJECTION_ERRORS, errorCount);
 		jobContext.putInt(BatchConstants.Job.PREVIOUS_POLYGONS_SKIPPED, polygonsSkipped);
+		AlertCountsContext.write(jobContext, BatchConstants.Job.PREVIOUS_ALERT_COUNTS_PREFIX, alertCounts);
 		jobRepository.updateExecutionContext(jobExecution);
 	}
 
@@ -385,17 +392,19 @@ public final class BatchUtils {
 		int polygonsProcessed = jobContext.getInt(BatchConstants.Job.PREVIOUS_POLYGONS_PROCESSED, 0);
 		int errorCount = jobContext.getInt(BatchConstants.Job.PREVIOUS_PROJECTION_ERRORS, 0);
 		int polygonsSkipped = jobContext.getInt(BatchConstants.Job.PREVIOUS_POLYGONS_SKIPPED, 0);
+		AlertCounts alertCounts = AlertCountsContext.read(jobContext, BatchConstants.Job.PREVIOUS_ALERT_COUNTS_PREFIX);
 		for (StepExecution step : jobExecution.getStepExecutions()) {
 			if (step.getStepName().startsWith(BatchConstants.Job.WORKER_STEP_NAME)) {
 				WorkerStepProgress progress = progressFromStep(step);
 				polygonsProcessed += progress.polygonsProcessed();
 				errorCount += progress.errorCount();
 				polygonsSkipped += progress.polygonsSkipped();
+				alertCounts = alertCounts.plus(progress.alertCounts());
 			}
 		}
 		// Finished projections report 0 workers (no active threads)
 		return new VDYPProjectionProgressUpdate(
-				jobGuid, totalPolygons, polygonsProcessed, errorCount, polygonsSkipped, 0
+				jobGuid, totalPolygons, polygonsProcessed, errorCount, polygonsSkipped, 0, alertCounts
 		);
 	}
 

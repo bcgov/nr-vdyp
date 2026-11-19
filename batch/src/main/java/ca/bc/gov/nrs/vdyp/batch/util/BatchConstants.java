@@ -30,6 +30,8 @@ public final class BatchConstants {
 		public static final String PREVIOUS_POLYGONS_PROCESSED = "previousPolygonsProcessed";
 		public static final String PREVIOUS_POLYGONS_SKIPPED = "previousPolygonsSkipped";
 		public static final String PREVIOUS_PROJECTION_ERRORS = "previousProjectionErrors";
+		public static final String ALERT_COUNTS_PREFIX = "alertCounts.";
+		public static final String PREVIOUS_ALERT_COUNTS_PREFIX = "previousAlertCounts.";
 		public static final String WORKERS = "workers";
 		public static final String COMPUTED_PARTITIONS = "computedPartitions";
 		public static final String RESERVED_THREADS = "reservedThreads";

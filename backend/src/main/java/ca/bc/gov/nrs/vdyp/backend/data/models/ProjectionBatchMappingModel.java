@@ -15,6 +15,12 @@ public class ProjectionBatchMappingModel {
 	private Integer completedPolygonCount;
 	private Integer errorCount;
 	private Integer warningCount;
+	private int errorMessageCount;
+	private int errorPolygonCount;
+	private int warningMessageCount;
+	private int warningPolygonCount;
+	private int infoMessageCount;
+	private int infoPolygonCount;
 	private Integer workerCount;
 	private boolean isPrioritized;
 	private BatchFailureTypeCodeModel batchFailureTypeCode;
@@ -116,5 +122,53 @@ public class ProjectionBatchMappingModel {
 
 	public void setLastProgressTime(OffsetDateTime lastProgressTime) {
 		this.lastProgressTime = lastProgressTime;
+	}
+
+	public int getErrorMessageCount() {
+		return errorMessageCount;
+	}
+
+	public void setErrorMessageCount(int errorMessageCount) {
+		this.errorMessageCount = errorMessageCount;
+	}
+
+	public int getErrorPolygonCount() {
+		return errorPolygonCount;
+	}
+
+	public void setErrorPolygonCount(int errorPolygonCount) {
+		this.errorPolygonCount = errorPolygonCount;
+	}
+
+	public int getWarningMessageCount() {
+		return warningMessageCount;
+	}
+
+	public void setWarningMessageCount(int warningMessageCount) {
+		this.warningMessageCount = warningMessageCount;
+	}
+
+	public int getWarningPolygonCount() {
+		return warningPolygonCount;
+	}
+
+	public void setWarningPolygonCount(int warningPolygonCount) {
+		this.warningPolygonCount = warningPolygonCount;
+	}
+
+	public int getInfoMessageCount() {
+		return infoMessageCount;
+	}
+
+	public void setInfoMessageCount(int infoMessageCount) {
+		this.infoMessageCount = infoMessageCount;
+	}
+
+	public int getInfoPolygonCount() {
+		return infoPolygonCount;
+	}
+
+	public void setInfoPolygonCount(int infoPolygonCount) {
+		this.infoPolygonCount = infoPolygonCount;
 	}
 }
