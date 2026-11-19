@@ -86,6 +86,12 @@ erDiagram
         integer completed_polygon_count
         integer error_count
         integer warning_count
+        integer error_message_count
+        integer error_polygon_count
+        integer warning_message_count
+        integer warning_polygon_count
+        integer info_message_count
+        integer info_polygon_count
         integer worker_count
         boolean is_prioritized
         varchar batch_failure_type_code FK

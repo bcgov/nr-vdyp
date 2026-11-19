@@ -42,6 +42,7 @@ import ca.bc.gov.nrs.vdyp.backend.data.repositories.ProjectionBatchMappingReposi
 import ca.bc.gov.nrs.vdyp.backend.exceptions.ProjectionServiceException;
 import ca.bc.gov.nrs.vdyp.backend.model.ProjectionProgressUpdate;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
+import ca.bc.gov.nrs.vdyp.ecore.projection.AlertCounts;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 
@@ -441,6 +442,31 @@ class ProjectionBatchMappingServiceTest {
 		assertEquals(20, mappingEntity.getErrorCount());
 		assertEquals(15, mappingEntity.getCompletedPolygonCount());
 		assertEquals(3, mappingEntity.getWorkerCount());
+	}
+
+	@Test
+	void updateProgress_withAlertCounts_storesAlertBreakdown() throws ProjectionServiceException {
+		UUID projectionGuid = UUID.randomUUID();
+		UUID batchJobGuid = UUID.randomUUID();
+		ProjectionEntity projectionEntity = projectionEntity(projectionGuid, UUID.randomUUID());
+		ProjectionBatchMappingEntity mappingEntity = new ProjectionBatchMappingEntity();
+		mappingEntity.setBatchJobGUID(batchJobGuid);
+
+		when(repository.findByProjectionGUID(projectionGuid)).thenReturn(Optional.of(mappingEntity));
+
+		ProjectionProgressUpdate update = new ProjectionProgressUpdate(
+				batchJobGuid, 100, 10, 4092, 5, 3, new AlertCounts(892, 200, 1200, 600, 2000, 1500), null, null
+		);
+
+		service.updateProgress(projectionEntity, update);
+
+		assertEquals(4092, mappingEntity.getErrorCount());
+		assertEquals(892, mappingEntity.getErrorMessageCount());
+		assertEquals(200, mappingEntity.getErrorPolygonCount());
+		assertEquals(1200, mappingEntity.getWarningMessageCount());
+		assertEquals(600, mappingEntity.getWarningPolygonCount());
+		assertEquals(2000, mappingEntity.getInfoMessageCount());
+		assertEquals(1500, mappingEntity.getInfoPolygonCount());
 	}
 
 	@Test

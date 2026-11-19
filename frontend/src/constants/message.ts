@@ -349,6 +349,15 @@ export const ADMIN_DASHBOARD_POLYGONS = Object.freeze({
     'Polygon counts for queued projections are pre-execution estimates based on the uploaded input dataset.',
 })
 
+export const ALERT_COUNT = Object.freeze({
+  TILE_LABEL: 'Alert Count',
+  ERRORS: 'Errors',
+  WARNINGS: 'Warnings',
+  INFO_MESSAGES: 'Info Messages',
+  TOOLTIP_LINE: (alertType: string, messageCount: string, polygonCount: string, isSinglePolygon: boolean) =>
+    `${alertType}: ${messageCount} (${polygonCount} ${isSinglePolygon ? 'Polygon' : 'Polygons'})`,
+})
+
 export const VALIDATION_WARN = Object.freeze({
   FORM_REF_NULL: 'Form reference is null. Validation skipped.',
 })

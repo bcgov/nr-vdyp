@@ -56,8 +56,16 @@ export interface BatchMappingModel {
   batchJobGUID: string
   polygonCount: number | null
   completedPolygonCount: number | null
+  // Total alert count (all message types)
   errorCount: number | null
   warningCount: number | null
+  // Message and polygon counts per alert type (Error includes F, Info includes S)
+  errorMessageCount?: number | null
+  errorPolygonCount?: number | null
+  warningMessageCount?: number | null
+  warningPolygonCount?: number | null
+  infoMessageCount?: number | null
+  infoPolygonCount?: number | null
   workerCount?: number | null
   isPrioritized?: boolean | null
   batchFailureTypeCode?: BatchFailureTypeCodeModel | null
