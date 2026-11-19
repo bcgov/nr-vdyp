@@ -210,8 +210,8 @@ public class ProjectionRunner implements Closeable {
 	 * Logs each of the given exception's validation messages to the error log, one line per message. If the exception
 	 * carries a separate polygon/layer context prefix (see AbstractProjectionRequestException.getContextPrefix()), that
 	 * prefix is prepended to each line; otherwise the message is logged as-is, since in that case any such context was
-	 * already baked into the message itself at construction time.
-	 * Validation messages are always counted as ERROR alerts.
+	 * already baked into the message itself at construction time. Validation messages are always counted as ERROR
+	 * alerts.
 	 */
 	private void logValidationMessages(AbstractProjectionRequestException e, Set<AlertType> polygonAlertTypes) {
 		String contextPrefix = e.getContextPrefix();
