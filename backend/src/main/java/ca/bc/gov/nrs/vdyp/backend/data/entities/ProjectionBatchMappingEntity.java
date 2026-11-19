@@ -117,6 +117,30 @@ public class ProjectionBatchMappingEntity extends AuditableEntity {
 		return lastProgressTime;
 	}
 
+	public int getErrorMessageCount() {
+		return errorMessageCount;
+	}
+
+	public int getErrorPolygonCount() {
+		return errorPolygonCount;
+	}
+
+	public int getWarningMessageCount() {
+		return warningMessageCount;
+	}
+
+	public int getWarningPolygonCount() {
+		return warningPolygonCount;
+	}
+
+	public int getInfoMessageCount() {
+		return infoMessageCount;
+	}
+
+	public int getInfoPolygonCount() {
+		return infoPolygonCount;
+	}
+
 	public void setProjectionBatchMappingGUID(UUID projectionBatchMappingGUID) {
 		this.projectionBatchMappingGUID = projectionBatchMappingGUID;
 	}
@@ -165,48 +189,24 @@ public class ProjectionBatchMappingEntity extends AuditableEntity {
 		this.lastProgressTime = lastProgressTime;
 	}
 
-	public int getErrorMessageCount() {
-		return errorMessageCount;
-	}
-
 	public void setErrorMessageCount(int errorMessageCount) {
 		this.errorMessageCount = errorMessageCount;
-	}
-
-	public int getErrorPolygonCount() {
-		return errorPolygonCount;
 	}
 
 	public void setErrorPolygonCount(int errorPolygonCount) {
 		this.errorPolygonCount = errorPolygonCount;
 	}
 
-	public int getWarningMessageCount() {
-		return warningMessageCount;
-	}
-
 	public void setWarningMessageCount(int warningMessageCount) {
 		this.warningMessageCount = warningMessageCount;
-	}
-
-	public int getWarningPolygonCount() {
-		return warningPolygonCount;
 	}
 
 	public void setWarningPolygonCount(int warningPolygonCount) {
 		this.warningPolygonCount = warningPolygonCount;
 	}
 
-	public int getInfoMessageCount() {
-		return infoMessageCount;
-	}
-
 	public void setInfoMessageCount(int infoMessageCount) {
 		this.infoMessageCount = infoMessageCount;
-	}
-
-	public int getInfoPolygonCount() {
-		return infoPolygonCount;
 	}
 
 	public void setInfoPolygonCount(int infoPolygonCount) {

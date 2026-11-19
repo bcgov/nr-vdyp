@@ -55,6 +55,30 @@ public class ProjectionBatchMappingModel {
 		return warningCount;
 	}
 
+	public int getErrorMessageCount() {
+		return errorMessageCount;
+	}
+
+	public int getWarningMessageCount() {
+		return warningMessageCount;
+	}
+
+	public int getInfoMessageCount() {
+		return infoMessageCount;
+	}
+
+	public int getErrorPolygonCount() {
+		return errorPolygonCount;
+	}
+
+	public int getWarningPolygonCount() {
+		return warningPolygonCount;
+	}
+
+	public int getInfoPolygonCount() {
+		return infoPolygonCount;
+	}
+
 	public BatchFailureTypeCodeModel getBatchFailureTypeCode() {
 		return batchFailureTypeCode;
 	}
@@ -91,6 +115,30 @@ public class ProjectionBatchMappingModel {
 		this.warningCount = warningCount;
 	}
 
+	public void setErrorMessageCount(int errorMessageCount) {
+		this.errorMessageCount = errorMessageCount;
+	}
+
+	public void setWarningMessageCount(int warningMessageCount) {
+		this.warningMessageCount = warningMessageCount;
+	}
+
+	public void setInfoMessageCount(int infoMessageCount) {
+		this.infoMessageCount = infoMessageCount;
+	}
+
+	public void setErrorPolygonCount(int errorPolygonCount) {
+		this.errorPolygonCount = errorPolygonCount;
+	}
+
+	public void setWarningPolygonCount(int warningPolygonCount) {
+		this.warningPolygonCount = warningPolygonCount;
+	}
+
+	public void setInfoPolygonCount(int infoPolygonCount) {
+		this.infoPolygonCount = infoPolygonCount;
+	}
+
 	public void setBatchFailureTypeCode(BatchFailureTypeCodeModel batchFailureTypeCode) {
 		this.batchFailureTypeCode = batchFailureTypeCode;
 	}
@@ -122,53 +170,5 @@ public class ProjectionBatchMappingModel {
 
 	public void setLastProgressTime(OffsetDateTime lastProgressTime) {
 		this.lastProgressTime = lastProgressTime;
-	}
-
-	public int getErrorMessageCount() {
-		return errorMessageCount;
-	}
-
-	public void setErrorMessageCount(int errorMessageCount) {
-		this.errorMessageCount = errorMessageCount;
-	}
-
-	public int getErrorPolygonCount() {
-		return errorPolygonCount;
-	}
-
-	public void setErrorPolygonCount(int errorPolygonCount) {
-		this.errorPolygonCount = errorPolygonCount;
-	}
-
-	public int getWarningMessageCount() {
-		return warningMessageCount;
-	}
-
-	public void setWarningMessageCount(int warningMessageCount) {
-		this.warningMessageCount = warningMessageCount;
-	}
-
-	public int getWarningPolygonCount() {
-		return warningPolygonCount;
-	}
-
-	public void setWarningPolygonCount(int warningPolygonCount) {
-		this.warningPolygonCount = warningPolygonCount;
-	}
-
-	public int getInfoMessageCount() {
-		return infoMessageCount;
-	}
-
-	public void setInfoMessageCount(int infoMessageCount) {
-		this.infoMessageCount = infoMessageCount;
-	}
-
-	public int getInfoPolygonCount() {
-		return infoPolygonCount;
-	}
-
-	public void setInfoPolygonCount(int infoPolygonCount) {
-		this.infoPolygonCount = infoPolygonCount;
 	}
 }
