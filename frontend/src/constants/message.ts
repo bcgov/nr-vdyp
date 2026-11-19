@@ -339,6 +339,11 @@ export const SYSTEM_STORAGE = Object.freeze({
   ORPHANED_STORAGE_EXISTS: 'Orphaned Storage Exists',
 })
 
+export const ADMIN_DASHBOARD_ELAPSED = Object.freeze({
+  QUEUE_WAIT_TOOLTIP:
+    'The displayed time represents the cumulative duration the job has spent waiting in the queue prior to resource allocation.',
+})
+
 export const ADMIN_DASHBOARD_POLYGONS = Object.freeze({
   ESTIMATE_TOOLTIP:
     'Polygon counts for queued projections are pre-execution estimates based on the uploaded input dataset.',

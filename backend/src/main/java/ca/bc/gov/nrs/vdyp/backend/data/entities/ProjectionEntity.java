@@ -62,6 +62,9 @@ public class ProjectionEntity extends AuditableEntity {
 	@JoinColumn(name = "projection_status_code", referencedColumnName = "projection_status_code")
 	private ProjectionStatusCodeEntity projectionStatusCode;
 
+	@Column(name = "queued_date")
+	private OffsetDateTime queuedDate;
+
 	public UUID getProjectionGUID() {
 		return projectionGUID;
 	}
@@ -172,5 +175,13 @@ public class ProjectionEntity extends AuditableEntity {
 
 	public void setAdminCancelReason(String adminCancelReason) {
 		this.adminCancelReason = adminCancelReason;
+	}
+
+	public OffsetDateTime getQueuedDate() {
+		return queuedDate;
+	}
+
+	public void setQueuedDate(OffsetDateTime queuedDate) {
+		this.queuedDate = queuedDate;
 	}
 }

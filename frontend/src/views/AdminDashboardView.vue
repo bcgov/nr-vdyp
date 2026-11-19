@@ -119,7 +119,7 @@ import type { StorageStatusModel, StorageCleanupReportModel } from '@/services/v
 import { fetchAllRunningProjections, fetchThreadCapacity, fetchStorageStatus } from '@/services/adminService'
 import { cancelProjection, prioritizeProjection } from '@/services/projectionService'
 import { useNotificationStore } from '@/stores/common/notificationStore'
-import { formatBytes, hasPolygonEstimate } from '@/utils/util'
+import { formatBytes, getElapsedMs, getElapsedStartDate, hasPolygonEstimate } from '@/utils/util'
 
 const notificationStore = useNotificationStore()
 
@@ -312,11 +312,9 @@ const getSortValue = (projection: AdminProjection, key: string): string | number
     return `1-${projection.status.toLowerCase()}`
   }
   if (key === ADMIN_DASHBOARD_HEADER_KEY.ELAPSED) {
-    // Queued projections display '-' (no startDate yet), so they're sorted as lower than any
-    // running projection's elapsed time: below it in descending order, above it (first) in
-    // ascending order.
-    if (!projection.startDate) return -1
-    return now.value - new Date(projection.startDate).getTime()
+    // Sort by the displayed time (queue wait time if queued, otherwise run time).
+    // Rows showing '-' sort lowest.
+    return getElapsedMs(getElapsedStartDate(projection), now.value) ?? -1
   }
   if (key === ADMIN_DASHBOARD_HEADER_KEY.PROGRESS) {
     // Queued projections display '-' (processing hasn't started) rather than their underlying 0%
@@ -455,7 +453,7 @@ const handlePrioritize = async (projectionGUID: string) => {
   }
 }
 
-// Ticking clock so Elapsed (HH:MM:SS) updates live for RUNNING projections
+// Ticking clock so the Elapsed column (run time or queue wait time) updates live
 const now = ref(Date.now())
 let clockTimer: ReturnType<typeof setInterval> | null = null
 

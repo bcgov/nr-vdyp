@@ -632,6 +632,58 @@ export const hasPolygonEstimate = (projection: {
   )
 }
 
+/**
+ * Gets the date the Admin Dashboard's Elapsed column counts from. A queued projection counts
+ * its queue wait time from when it was submitted (queuedDate); any other projection counts its
+ * run time from when processing started (startDate).
+ *
+ * @returns {string | null} The date to count from, or null when it is not known
+ */
+export const getElapsedStartDate = (projection: {
+  status: string
+  queuedDate: string | null
+  startDate: string | null
+}): string | null => {
+  return projection.status === CONSTANTS.PROJECTION_STATUS.QUEUED
+    ? projection.queuedDate
+    : projection.startDate
+}
+
+/**
+ * Gets the milliseconds elapsed from a date until now, never negative.
+ *
+ * @param fromDate - The date to count from (e.g. '2026-01-10T14:30:00Z')
+ * @param now - The current time in milliseconds
+ * @returns {number | null} Elapsed milliseconds, or null when the date is missing or invalid
+ */
+export const getElapsedMs = (fromDate: string | null, now: number): number | null => {
+  if (!fromDate) return null
+  const fromMs = new Date(fromDate).getTime()
+  if (Number.isNaN(fromMs)) return null
+  return Math.max(0, now - fromMs)
+}
+
+/**
+ * Formats the time elapsed from a date until now as HH:MM:SS.
+ *
+ * @param fromDate - The date to count from (e.g. '2026-01-10T14:30:00Z')
+ * @param now - The current time in milliseconds
+ * @returns {string} The elapsed time as HH:MM:SS, or '-' when the date is missing or invalid
+ * @example
+ *   formatElapsedTime('2026-01-01T00:00:00Z', Date.parse('2026-01-01T01:02:03Z')) // "01:02:03"
+ */
+export const formatElapsedTime = (fromDate: string | null, now: number): string => {
+  const elapsedMs = getElapsedMs(fromDate, now)
+  if (elapsedMs === null) return '-'
+
+  const elapsedSeconds = Math.floor(elapsedMs / 1000)
+  const hours = Math.floor(elapsedSeconds / 3600)
+  const minutes = Math.floor((elapsedSeconds % 3600) / 60)
+  const seconds = elapsedSeconds % 60
+  const pad = (n: number) => n.toString().padStart(2, '0')
+  return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`
+}
+
 const BYTE_UNITS = ['B', 'KB', 'MB', 'GB', 'TB'] as const
 
 /**

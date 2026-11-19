@@ -44,6 +44,7 @@ export const transformAdminProjection = (model: ProjectionModel): AdminProjectio
     title: model.reportTitle || '',
     ownerDisplayName: getOwnerDisplayName(model.ownerUser),
     userType: (model.ownerUser?.identityProviderCode?.code as UserTypeCode) ?? null,
+    queuedDate: model.queuedDate ?? null,
     startDate: model.startDate,
     status: mapProjectionStatus(model.projectionStatusCode?.code || PROJECTION_STATUS.DRAFT),
     workerCount: batchMapping?.workerCount ?? 0,

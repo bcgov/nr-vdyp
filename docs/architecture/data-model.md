@@ -54,6 +54,7 @@ erDiagram
         uuid RESULT_projection_file_set_guid FK
         varchar projection_parameters_json
         varchar model_parameters_json
+        timestamp queued_date
         timestamp start_date
         timestamp end_date
         varchar report_title

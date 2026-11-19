@@ -16,6 +16,7 @@ describe('adminService Unit Tests', () => {
           displayName: null,
           identityProviderCode: { code: USER_TYPE_CODE.IDIR },
         },
+        queuedDate: '2024-01-01T19:30:00Z',
         startDate: '2024-01-01T20:00:00Z',
         projectionStatusCode: { code: 'RUNNING' },
         batchMapping: {
@@ -33,6 +34,7 @@ describe('adminService Unit Tests', () => {
         title: 'Test Title',
         ownerDisplayName: 'J. Doe',
         userType: USER_TYPE_CODE.IDIR,
+        queuedDate: '2024-01-01T19:30:00Z',
         startDate: '2024-01-01T20:00:00Z',
         status: PROJECTION_STATUS.RUNNING,
         workerCount: 2,
@@ -60,6 +62,7 @@ describe('adminService Unit Tests', () => {
         title: '',
         ownerDisplayName: '',
         userType: null,
+        queuedDate: null,
         startDate: null,
         status: PROJECTION_STATUS.DRAFT,
         workerCount: 0,
