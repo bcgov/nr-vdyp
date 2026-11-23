@@ -171,7 +171,7 @@ public class ProjectionRunner implements Closeable {
 					if (polygon != null) {
 						for (var message : polygon.getMessages()) {
 							AlertType alertType = AlertType.of(message.getSeverity());
-							context.logAlert(alertType, message.toString());
+							context.logAlertMessage(alertType, message.toString());
 							polygonAlertTypes.add(alertType);
 						}
 					} else {
@@ -186,7 +186,7 @@ public class ProjectionRunner implements Closeable {
 
 			// Messages for input rows that match no polygon: counted as Error messages, but not in any polygon count.
 			for (var message : polygonStream.drainRemainingValidationMessages()) {
-				context.logAlert(AlertType.ERROR, message.getMessage());
+				context.logAlertMessage(AlertType.ERROR, message.getMessage());
 			}
 
 			int nPolygonsSeen = nPolygonsProcessed + nPolygonsSkipped;
@@ -216,7 +216,7 @@ public class ProjectionRunner implements Closeable {
 	private void logValidationMessages(AbstractProjectionRequestException e, Set<AlertType> polygonAlertTypes) {
 		String contextPrefix = e.getContextPrefix();
 		for (ValidationMessage m : e.getValidationMessages()) {
-			context.logAlert(AlertType.ERROR, m.getErrorLogMessage(contextPrefix));
+			context.logAlertMessage(AlertType.ERROR, m.getErrorLogMessage(contextPrefix));
 			polygonAlertTypes.add(AlertType.ERROR);
 		}
 	}

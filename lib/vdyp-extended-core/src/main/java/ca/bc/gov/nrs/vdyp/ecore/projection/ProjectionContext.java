@@ -335,13 +335,9 @@ public class ProjectionContext {
 		return errorLogCount;
 	}
 
-	public void logError(String message, Object... args) {
+	public void logAlertMessage(AlertType alertType, String message) {
 		errorLogCount++;
-		errorLog.addMessage(message, args);
-	}
-
-	public void logAlert(AlertType alertType, String message) {
-		logError(message);
+		errorLog.addMessage(message);
 		alertMessageCounts[alertType.ordinal()]++;
 	}
 
