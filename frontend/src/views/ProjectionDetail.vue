@@ -689,7 +689,7 @@ const fileUploadDisabledText = computed(() => {
 
 /**
  * Enables reporting tabs, navigates to the appropriate tab, and shows a result message.
- * Navigates to Error Messages tab only if the yield table is empty (the projection actually failed),
+ * Navigates to Alert Log tab only if the yield table is empty (the projection actually failed),
  * otherwise Model Report tab. A non-empty error log alone does not mean the projection failed.
  */
 const enableTabsAndNavigate = async (hasErrors: boolean, showMessage: boolean = true) => {

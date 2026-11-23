@@ -11,6 +11,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
@@ -34,6 +35,7 @@ import ca.bc.gov.nrs.vdyp.batch.util.BatchUtils;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.ProjectionRequestValidationException;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ProjectionRequestKind;
+import ca.bc.gov.nrs.vdyp.ecore.projection.AlertCounts;
 import ca.bc.gov.nrs.vdyp.ecore.projection.ProjectionRequestParametersValidator;
 import ca.bc.gov.nrs.vdyp.ecore.projection.RunProcessingMessages;
 
@@ -761,12 +763,41 @@ public class BatchResultAggregationService {
 		String progress = String.format(
 				"""
 						Projection Type: HCSV
-						Processed %d polygons...
-						Processing summary: %d polygons Projected Successfully + %d Failed to Project = %d Processed
-						Total Duration: %s""", processed + skipped, processed, skipped, processed + skipped,
+						Processed %s polygons...
+						Processing summary: %s polygons Projected Successfully + %s Failed to Project = %s Processed
+						%sTotal Duration: %s""", withCommas(processed + skipped), withCommas(processed),
+				withCommas(skipped), withCommas(processed + skipped), alertsSummary(progressUpdate),
 				BatchUtils.formatDuration(duration)
 		);
 		zipOut.write(progress.getBytes(StandardCharsets.UTF_8));
+	}
+
+	// Empty when the update has no alert counts
+	private static String alertsSummary(VDYPProjectionProgressUpdate progressUpdate) {
+		AlertCounts alertCounts = progressUpdate.alertCounts();
+		if (alertCounts == null) {
+			return "";
+		}
+		String totalAlerts = withCommas(progressUpdate.projectionErrors());
+		return String.format(
+				"""
+						Generated %s Alerts ...
+						Alerts summary: %s Errors (%s) + %s Warnings (%s) + %s Info Messages (%s) = %s Alerts
+						""", totalAlerts, withCommas(alertCounts.errorMessageCount()),
+				polygons(alertCounts.errorPolygonCount()), withCommas(alertCounts.warningMessageCount()),
+				polygons(alertCounts.warningPolygonCount()), withCommas(alertCounts.infoMessageCount()),
+				polygons(alertCounts.infoPolygonCount()), totalAlerts
+		);
+	}
+
+	// e.g. 4092 -> "4,092"
+	private static String withCommas(int value) {
+		return String.format(Locale.US, "%,d", value);
+	}
+
+	// e.g. 1 -> "1 Polygon", 1500 -> "1,500 Polygons"
+	private static String polygons(int count) {
+		return withCommas(count) + (count == 1 ? " Polygon" : " Polygons");
 	}
 
 	/**
