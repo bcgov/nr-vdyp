@@ -212,6 +212,36 @@ public class ProjectionRunnerTest {
 	}
 
 	@Test
+	void testPolygonWithMultipleWarningsIsCountedOnce() throws Exception {
+		try (
+				var runner = new ProjectionRunner(
+						ProjectionRequestKind.HCSV, "TEST", validationLoggingParameters(), false
+				)
+		) {
+			runner.run(
+					Map.of(
+							ParameterNames.HCSV_POLYGON_INPUT_DATA,
+							TestUtils.makeInputStream(
+									TestUtils.POLYGON_CSV_HEADER_LINE,
+									"13919428,093C090,94833422,DQU,UNK,UNK,V,UNK,0.6,10,3,HE,35,8,,MS,14,50.0,1.000,,V,T,U,TC,SP,2013,2013,60.0,,,,,,,,,,TC,100,,,,"
+							), ParameterNames.HCSV_LAYERS_INPUT_DATA,
+							TestUtils.makeInputStream(
+									TestUtils.LAYER_CSV_HEADER_LINE,
+									"13919428,14321066,093C090,94833422,1,V,,1,,,,20,10,300,PLI,100.00,,,,,,,,,,,180,18.00,,,,,,,,,,",
+									"13919428,14321067,093C090,94833422,2,V,,1,,,,20,10,300,PLI,100.00,,,,,,,,,,,180,18.00,,,,,,,,,,",
+									"13919428,14321068,093C090,94833422,3,V,,1,,,,20,10,300,PLI,100.00,,,,,,,,,,,180,18.00,,,,,,,,,,"
+							)
+					), new StubComponentRunner()
+			);
+			String errors = new String(runner.getErrorStream().readAllBytes());
+			AlertCounts counts = runner.getAlertCounts();
+			assertEquals(2, counts.warningMessageCount(), errors);
+			assertEquals(1, counts.warningPolygonCount(), errors);
+			assertAlertCountsMatchErrorLog(runner, errors);
+		}
+	}
+
+	@Test
 	void testInvalidFeatureIdIsLoggedWithOriginalIdentity() throws Exception {
 		try (
 				var runner = new ProjectionRunner(
