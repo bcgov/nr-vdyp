@@ -186,7 +186,7 @@ export const ViewErrorMessages_WithData: Story = {
     docs: {
       description: {
         story:
-          'Error Log tab with validation errors and warnings.',
+          'Alert Log tab with validation errors and warnings.',
       },
     },
   },
@@ -209,7 +209,7 @@ export const ViewErrorMessages_Empty: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Error Log tab with no errors - output area is blank.',
+        story: 'Alert Log tab with no alerts - output area is blank.',
       },
     },
   },

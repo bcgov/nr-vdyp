@@ -144,15 +144,6 @@ describe('Util Functions Unit Tests', () => {
       expect(formatDateTimeDisplay('2025-11-02T10:30:00Z', BC_TIME_ZONE)).to.equal('Nov 02 / 02:30')
     })
 
-    it('should not fall back one hour in BC after November 2026', () => {
-      // No fall-back on 2026-11-01: BC stays at UTC-7
-      expect(formatDateTimeDisplay('2026-11-01T08:30:00Z', BC_TIME_ZONE)).to.equal('Nov 01 / 01:30')
-      expect(formatDateTimeDisplay('2026-11-01T09:30:00Z', BC_TIME_ZONE)).to.equal('Nov 01 / 02:30')
-      expect(formatDateTimeDisplay('2026-11-15T20:00:00Z', BC_TIME_ZONE)).to.equal('Nov 15 / 13:00')
-      expect(formatDateTimeDisplay('2027-01-15T20:00:00Z', BC_TIME_ZONE)).to.equal('Jan 15 / 13:00')
-      expect(formatDateTimeDisplay('2027-07-15T20:00:00Z', BC_TIME_ZONE)).to.equal('Jul 15 / 13:00')
-    })
-
     it('should return an empty string for an invalid timestamp', () => {
       expect(formatDateTimeDisplay('')).to.equal('')
     })

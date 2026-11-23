@@ -210,7 +210,7 @@ export const MANUAL_INPUT_TAB_NAME = Object.freeze({
   MODEL_PARAM_SELECTION: 'Parameters',
   MODEL_REPORT: 'Yield Table',
   VIEW_LOG_FILE: 'Progress Log',
-  VIEW_ERROR_MESSAGES: 'Error Log',
+  VIEW_ERROR_MESSAGES: 'Alert Log',
   VIEW_DEBUG_LOG: 'Debug Log',
 })
 

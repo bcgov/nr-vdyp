@@ -78,7 +78,7 @@ export const ViewErrorMessages: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Error Log tab showing projection errors. Uses a fixed height of 420px.',
+        story: 'Alert Log tab showing projection alerts. Uses a fixed height of 420px.',
       },
     },
   },
