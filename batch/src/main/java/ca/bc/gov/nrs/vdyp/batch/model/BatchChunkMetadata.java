@@ -2,6 +2,8 @@ package ca.bc.gov.nrs.vdyp.batch.model;
 
 import org.springframework.lang.NonNull;
 
+import ca.bc.gov.nrs.vdyp.ecore.projection.AlertCounts;
+
 /**
  * Metadata for a chunk of records to be processed. Instead of loading entire CSV data into memory, this class holds
  * only the information needed to locate and stream the data from partition files.
@@ -27,6 +29,7 @@ public class BatchChunkMetadata {
 
 	private int errorCount; // Number of errors encountered while processing this chunk
 	private int skippedPolygonCount; // Number of errors encountered while processing this chunk
+	private AlertCounts alertCounts = AlertCounts.NONE; // Alert breakdown by type for this chunk
 
 	public BatchChunkMetadata(
 			@NonNull String partitionName, @NonNull String jobBaseDir, long polygonStartByte, int polygonRecordCount,
@@ -93,5 +96,13 @@ public class BatchChunkMetadata {
 
 	public int getSkippedPolygonCount() {
 		return skippedPolygonCount;
+	}
+
+	public void setAlertCounts(AlertCounts alertCounts) {
+		this.alertCounts = alertCounts == null ? AlertCounts.NONE : alertCounts;
+	}
+
+	public AlertCounts getAlertCounts() {
+		return alertCounts;
 	}
 }

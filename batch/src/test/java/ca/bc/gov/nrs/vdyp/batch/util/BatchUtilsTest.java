@@ -36,6 +36,7 @@ import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.item.ExecutionContext;
 
 import ca.bc.gov.nrs.vdyp.batch.model.VDYPProjectionProgressUpdate;
+import ca.bc.gov.nrs.vdyp.ecore.projection.AlertCounts;
 import ca.bc.gov.nrs.vdyp.ecore.utils.CsvRecordBeanHelper;
 
 class BatchUtilsTest {
@@ -176,6 +177,7 @@ class BatchUtilsTest {
 		assertEquals(0, result.polygonsProcessed());
 		assertEquals(0, result.projectionErrors());
 		assertEquals(0, result.polygonsSkipped());
+		assertEquals(AlertCounts.NONE, result.alertCounts());
 		assertNull(result.batchFailureTypeCode());
 		assertNull(result.failureMessage());
 	}
@@ -213,12 +215,16 @@ class BatchUtilsTest {
 		jobContext.putInt(BatchConstants.Job.PREVIOUS_POLYGONS_PROCESSED, 3);
 		jobContext.putInt(BatchConstants.Job.PREVIOUS_PROJECTION_ERRORS, 1);
 		jobContext.putInt(BatchConstants.Job.PREVIOUS_POLYGONS_SKIPPED, 1);
+		AlertCountsContext
+				.write(jobContext, BatchConstants.Job.PREVIOUS_ALERT_COUNTS_PREFIX, new AlertCounts(1, 1, 2, 2, 3, 3));
 		when(jobExecution.getExecutionContext()).thenReturn(jobContext);
 
 		StepExecution workerStep = mock(StepExecution.class);
 		when(workerStep.getStepName()).thenReturn(BatchConstants.Job.WORKER_STEP_NAME + ":partition0");
 		ExecutionContext stepContext = new ExecutionContext();
 		stepContext.putInt(BatchConstants.Job.POLYGONS_PROCESSED, 8);
+		AlertCountsContext
+				.write(stepContext, BatchConstants.Job.ALERT_COUNTS_PREFIX, new AlertCounts(10, 5, 20, 10, 30, 15));
 		when(workerStep.getExecutionContext()).thenReturn(stepContext);
 		when(jobExecution.getStepExecutions()).thenReturn(List.of(workerStep));
 
@@ -228,6 +234,7 @@ class BatchUtilsTest {
 		assertEquals(11, result.polygonsProcessed());
 		assertEquals(1, result.projectionErrors());
 		assertEquals(1, result.polygonsSkipped());
+		assertEquals(new AlertCounts(11, 6, 22, 12, 33, 18), result.alertCounts());
 	}
 
 	@Test
@@ -260,6 +267,8 @@ class BatchUtilsTest {
 		when(earlierStep.getStatus()).thenReturn(BatchStatus.COMPLETED);
 		ExecutionContext earlierStepCtx = new ExecutionContext();
 		earlierStepCtx.putInt(BatchConstants.Job.POLYGONS_PROCESSED, 3);
+		AlertCountsContext
+				.write(earlierStepCtx, BatchConstants.Job.ALERT_COUNTS_PREFIX, new AlertCounts(4, 2, 6, 3, 8, 4));
 		when(earlierStep.getExecutionContext()).thenReturn(earlierStepCtx);
 		when(earlierExecution.getStepExecutions()).thenReturn(List.of(earlierStep));
 
@@ -277,6 +286,10 @@ class BatchUtilsTest {
 
 		assertEquals(10, newJobCtx.getInt(BatchConstants.Job.PREVIOUS_TOTAL_POLYGONS, 0));
 		assertEquals(3, newJobCtx.getInt(BatchConstants.Job.PREVIOUS_POLYGONS_PROCESSED, 0));
+		assertEquals(
+				new AlertCounts(4, 2, 6, 3, 8, 4),
+				AlertCountsContext.read(newJobCtx, BatchConstants.Job.PREVIOUS_ALERT_COUNTS_PREFIX)
+		);
 		verify(jobRepository).updateExecutionContext(newExecution);
 	}
 

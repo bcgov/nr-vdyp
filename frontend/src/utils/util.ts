@@ -1,7 +1,10 @@
 import type { NumStrNullType } from '@/types/types'
 import JSZip from 'jszip'
 import { CONSTANTS } from '@/constants'
+import { ALERT_COUNT } from '@/constants/message'
 import { ExecutionOptionsEnum } from '@/services/vdyp-api'
+import type { BatchMappingModel } from '@/services/vdyp-api/models/projection-model'
+import type { AlertCounts } from '@/interfaces/interfaces'
 
 /**
  * Trims whitespace from a string value. Non-string values are returned unchanged.
@@ -614,6 +617,51 @@ export const strEq = (a: string | null | undefined, b: string | null | undefined
  */
 export const formatNumber = (value: number | null): string => {
   return (value ?? 0).toLocaleString()
+}
+
+/**
+ * Gets the Alert Count tooltip values from the batch mapping. Missing values become 0.
+ * Returns null when there is no batch mapping, or for old projections run before this feature
+ * (total is above 0 but all breakdown values are 0), so the tooltip is hidden.
+ *
+ * @returns {AlertCounts | null} The tooltip values, or null to hide the tooltip
+ */
+export const getAlertCounts = (
+  batchMapping: BatchMappingModel | null | undefined,
+): AlertCounts | null => {
+  if (!batchMapping) return null
+  const alertCounts: AlertCounts = {
+    errorMessageCount: batchMapping.errorMessageCount ?? 0,
+    errorPolygonCount: batchMapping.errorPolygonCount ?? 0,
+    warningMessageCount: batchMapping.warningMessageCount ?? 0,
+    warningPolygonCount: batchMapping.warningPolygonCount ?? 0,
+    infoMessageCount: batchMapping.infoMessageCount ?? 0,
+    infoPolygonCount: batchMapping.infoPolygonCount ?? 0,
+  }
+  const totalMessageCount =
+    alertCounts.errorMessageCount + alertCounts.warningMessageCount + alertCounts.infoMessageCount
+  if (totalMessageCount === 0 && (batchMapping.errorCount ?? 0) > 0) return null
+  return alertCounts
+}
+
+/**
+ * Builds the Alert Count tooltip lines (Errors, Warnings, Info Messages).
+ *
+ * @returns {string[]} One line per alert type
+ */
+export const buildAlertCountTooltipLines = (alertCounts: AlertCounts): string[] => {
+  const line = (alertType: string, messageCount: number, polygonCount: number) =>
+    ALERT_COUNT.TOOLTIP_LINE(
+      alertType,
+      formatNumber(messageCount),
+      formatNumber(polygonCount),
+      polygonCount === 1,
+    )
+  return [
+    line(ALERT_COUNT.ERRORS, alertCounts.errorMessageCount, alertCounts.errorPolygonCount),
+    line(ALERT_COUNT.WARNINGS, alertCounts.warningMessageCount, alertCounts.warningPolygonCount),
+    line(ALERT_COUNT.INFO_MESSAGES, alertCounts.infoMessageCount, alertCounts.infoPolygonCount),
+  ]
 }
 
 /**

@@ -10,6 +10,16 @@ export interface MessageDialog {
   variant?: 'info' | 'confirmation' | 'warning' | 'error'
 }
 
+/** Alert Count tooltip values: message count and polygon count for each alert type. */
+export interface AlertCounts {
+  errorMessageCount: number
+  errorPolygonCount: number
+  warningMessageCount: number
+  warningPolygonCount: number
+  infoMessageCount: number
+  infoPolygonCount: number
+}
+
 export interface SpeciesList {
   species: string | null
   percent: string | null

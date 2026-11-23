@@ -15,6 +15,12 @@ public class ProjectionBatchMappingModel {
 	private Integer completedPolygonCount;
 	private Integer errorCount;
 	private Integer warningCount;
+	private int errorMessageCount;
+	private int errorPolygonCount;
+	private int warningMessageCount;
+	private int warningPolygonCount;
+	private int infoMessageCount;
+	private int infoPolygonCount;
 	private Integer workerCount;
 	private boolean isPrioritized;
 	private BatchFailureTypeCodeModel batchFailureTypeCode;
@@ -47,6 +53,30 @@ public class ProjectionBatchMappingModel {
 
 	public Integer getWarningCount() {
 		return warningCount;
+	}
+
+	public int getErrorMessageCount() {
+		return errorMessageCount;
+	}
+
+	public int getWarningMessageCount() {
+		return warningMessageCount;
+	}
+
+	public int getInfoMessageCount() {
+		return infoMessageCount;
+	}
+
+	public int getErrorPolygonCount() {
+		return errorPolygonCount;
+	}
+
+	public int getWarningPolygonCount() {
+		return warningPolygonCount;
+	}
+
+	public int getInfoPolygonCount() {
+		return infoPolygonCount;
 	}
 
 	public BatchFailureTypeCodeModel getBatchFailureTypeCode() {
@@ -83,6 +113,30 @@ public class ProjectionBatchMappingModel {
 
 	public void setWarningCount(Integer warningCount) {
 		this.warningCount = warningCount;
+	}
+
+	public void setErrorMessageCount(int errorMessageCount) {
+		this.errorMessageCount = errorMessageCount;
+	}
+
+	public void setWarningMessageCount(int warningMessageCount) {
+		this.warningMessageCount = warningMessageCount;
+	}
+
+	public void setInfoMessageCount(int infoMessageCount) {
+		this.infoMessageCount = infoMessageCount;
+	}
+
+	public void setErrorPolygonCount(int errorPolygonCount) {
+		this.errorPolygonCount = errorPolygonCount;
+	}
+
+	public void setWarningPolygonCount(int warningPolygonCount) {
+		this.warningPolygonCount = warningPolygonCount;
+	}
+
+	public void setInfoPolygonCount(int infoPolygonCount) {
+		this.infoPolygonCount = infoPolygonCount;
 	}
 
 	public void setBatchFailureTypeCode(BatchFailureTypeCodeModel batchFailureTypeCode) {
