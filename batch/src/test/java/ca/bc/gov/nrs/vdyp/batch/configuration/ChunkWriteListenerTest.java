@@ -13,7 +13,9 @@ import org.springframework.batch.item.Chunk;
 import org.springframework.batch.item.ExecutionContext;
 
 import ca.bc.gov.nrs.vdyp.batch.model.BatchChunkMetadata;
+import ca.bc.gov.nrs.vdyp.batch.util.AlertCountsContext;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
+import ca.bc.gov.nrs.vdyp.ecore.projection.AlertCounts;
 
 class ChunkWriteListenerTest {
 
@@ -62,6 +64,22 @@ class ChunkWriteListenerTest {
 		assertThat(
 				"processed + skipped must not double-count polygons skipped within a successful chunk",
 				processed + skipped, is(meta.getPolygonRecordCount())
+		);
+	}
+
+	@Test
+	void afterWrite_accumulatesAlertCountsAcrossChunks() {
+		BatchChunkMetadata first = new BatchChunkMetadata("partition0", "/base", 0, 150, 0, 150, 1);
+		first.setAlertCounts(new AlertCounts(1, 1, 2, 2, 3, 3));
+		BatchChunkMetadata second = new BatchChunkMetadata("partition0", "/base", 150, 100, 150, 100, 2);
+		second.setAlertCounts(new AlertCounts(10, 5, 20, 10, 30, 15));
+
+		listener.afterWrite(new Chunk<>(first));
+		listener.afterWrite(new Chunk<>(second));
+
+		assertThat(
+				AlertCountsContext.read(executionContext, BatchConstants.Job.ALERT_COUNTS_PREFIX),
+				is(new AlertCounts(11, 6, 22, 12, 33, 18))
 		);
 	}
 

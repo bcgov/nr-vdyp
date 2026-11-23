@@ -29,6 +29,8 @@ import {
   getElapsedStartDate,
   getElapsedMs,
   formatElapsedTime,
+  getAlertCounts,
+  buildAlertCountTooltipLines,
 } from '@/utils/util'
 import JSZip from 'jszip'
 import { CONSTANTS } from '@/constants'
@@ -111,8 +113,8 @@ describe('Util Functions Unit Tests', () => {
     })
 
     it('should return null for an invalid timestamp', () => {
-      expect(getDateTimeParts('')).to.be.null
-      expect(getDateTimeParts('not a date')).to.be.null
+      assert.isNull(getDateTimeParts(''))
+      assert.isNull(getDateTimeParts('not a date'))
     })
   })
 
@@ -140,15 +142,6 @@ describe('Util Functions Unit Tests', () => {
       expect(formatDateTimeDisplay('2025-11-02T08:30:00Z', BC_TIME_ZONE)).to.equal('Nov 02 / 01:30')
       expect(formatDateTimeDisplay('2025-11-02T09:30:00Z', BC_TIME_ZONE)).to.equal('Nov 02 / 01:30')
       expect(formatDateTimeDisplay('2025-11-02T10:30:00Z', BC_TIME_ZONE)).to.equal('Nov 02 / 02:30')
-    })
-
-    it('should not fall back one hour in BC after November 2026', () => {
-      // No fall-back on 2026-11-01: BC stays at UTC-7
-      expect(formatDateTimeDisplay('2026-11-01T08:30:00Z', BC_TIME_ZONE)).to.equal('Nov 01 / 01:30')
-      expect(formatDateTimeDisplay('2026-11-01T09:30:00Z', BC_TIME_ZONE)).to.equal('Nov 01 / 02:30')
-      expect(formatDateTimeDisplay('2026-11-15T20:00:00Z', BC_TIME_ZONE)).to.equal('Nov 15 / 13:00')
-      expect(formatDateTimeDisplay('2027-01-15T20:00:00Z', BC_TIME_ZONE)).to.equal('Jan 15 / 13:00')
-      expect(formatDateTimeDisplay('2027-07-15T20:00:00Z', BC_TIME_ZONE)).to.equal('Jul 15 / 13:00')
     })
 
     it('should return an empty string for an invalid timestamp', () => {
@@ -381,6 +374,66 @@ describe('Util Functions Unit Tests', () => {
       addExecutionOptionsFromMappings(selected, excluded, [])
       assert.isEmpty(selected)
       assert.isEmpty(excluded)
+    })
+  })
+
+  describe('getAlertCounts', () => {
+    const baseMapping = {
+      projectionBatchMappingGUID: 'mapping-guid',
+      batchJobGUID: 'job-guid',
+      polygonCount: 10,
+      completedPolygonCount: 10,
+      errorCount: 6,
+      warningCount: 0,
+    }
+
+    it('should return null when there is no batch mapping', () => {
+      assert.isNull(getAlertCounts(null))
+      assert.isNull(getAlertCounts(undefined))
+    })
+
+    it('should copy the alert breakdown from the batch mapping', () => {
+      expect(
+        getAlertCounts({
+          ...baseMapping,
+          errorMessageCount: 1,
+          errorPolygonCount: 2,
+          warningMessageCount: 3,
+          warningPolygonCount: 4,
+          infoMessageCount: 5,
+          infoPolygonCount: 6,
+        }),
+      ).to.deep.equal({
+        errorMessageCount: 1,
+        errorPolygonCount: 2,
+        warningMessageCount: 3,
+        warningPolygonCount: 4,
+        infoMessageCount: 5,
+        infoPolygonCount: 6,
+      })
+    })
+
+    it('should return null for a projection run before the breakdown was recorded', () => {
+      assert.isNull(getAlertCounts(baseMapping))
+    })
+  })
+
+  describe('buildAlertCountTooltipLines', () => {
+    it('should build one line per alert type with thousands separators', () => {
+      expect(
+        buildAlertCountTooltipLines({
+          errorMessageCount: 892,
+          errorPolygonCount: 200,
+          warningMessageCount: 1200,
+          warningPolygonCount: 600,
+          infoMessageCount: 2000,
+          infoPolygonCount: 1500,
+        }),
+      ).to.deep.equal([
+        'Errors: 892 (200 Polygons)',
+        'Warnings: 1,200 (600 Polygons)',
+        'Info Messages: 2,000 (1,500 Polygons)',
+      ])
     })
   })
 

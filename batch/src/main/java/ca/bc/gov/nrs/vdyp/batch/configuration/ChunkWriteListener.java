@@ -10,7 +10,9 @@ import org.springframework.batch.item.ExecutionContext;
 import org.springframework.lang.NonNull;
 
 import ca.bc.gov.nrs.vdyp.batch.model.BatchChunkMetadata;
+import ca.bc.gov.nrs.vdyp.batch.util.AlertCountsContext;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
+import ca.bc.gov.nrs.vdyp.ecore.projection.AlertCounts;
 
 public class ChunkWriteListener implements ItemWriteListener<BatchChunkMetadata>, StepExecutionListener,
 		SkipListener<BatchChunkMetadata, BatchChunkMetadata> {
@@ -46,6 +48,10 @@ public class ChunkWriteListener implements ItemWriteListener<BatchChunkMetadata>
 		int projectionErrors = stepCtx.getInt(BatchConstants.Job.PROJECTION_ERRORS, 0);
 		projectionErrors += meta.getErrorCount();
 		stepCtx.putInt(BatchConstants.Job.PROJECTION_ERRORS, projectionErrors);
+
+		AlertCounts alertCounts = AlertCountsContext.read(stepCtx, BatchConstants.Job.ALERT_COUNTS_PREFIX);
+		AlertCountsContext
+				.write(stepCtx, BatchConstants.Job.ALERT_COUNTS_PREFIX, alertCounts.plus(meta.getAlertCounts()));
 
 		int polygonsSkipped = stepCtx.getInt(BatchConstants.Job.POLYGONS_SKIPPED, 0);
 		polygonsSkipped += meta.getSkippedPolygonCount();

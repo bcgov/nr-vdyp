@@ -32,6 +32,12 @@ public class ProjectionBatchMappingResourceAssembler {
 		entity.setCompletedPolygonCount(model.getCompletedPolygonCount());
 		entity.setWarningCount(model.getWarningCount());
 		entity.setErrorCount(model.getErrorCount());
+		entity.setErrorMessageCount(model.getErrorMessageCount());
+		entity.setErrorPolygonCount(model.getErrorPolygonCount());
+		entity.setWarningMessageCount(model.getWarningMessageCount());
+		entity.setWarningPolygonCount(model.getWarningPolygonCount());
+		entity.setInfoMessageCount(model.getInfoMessageCount());
+		entity.setInfoPolygonCount(model.getInfoPolygonCount());
 		entity.setWorkerCount(model.getWorkerCount());
 		entity.setPrioritized(model.isPrioritized());
 		entity.setBatchFailureTypeCode(bftcra.toEntity(model.getBatchFailureTypeCode()));
@@ -56,6 +62,12 @@ public class ProjectionBatchMappingResourceAssembler {
 		model.setCompletedPolygonCount(entity.getCompletedPolygonCount());
 		model.setWarningCount(entity.getWarningCount());
 		model.setErrorCount(entity.getErrorCount());
+		model.setErrorMessageCount(entity.getErrorMessageCount());
+		model.setErrorPolygonCount(entity.getErrorPolygonCount());
+		model.setWarningMessageCount(entity.getWarningMessageCount());
+		model.setWarningPolygonCount(entity.getWarningPolygonCount());
+		model.setInfoMessageCount(entity.getInfoMessageCount());
+		model.setInfoPolygonCount(entity.getInfoPolygonCount());
 		model.setWorkerCount(entity.getWorkerCount());
 		model.setPrioritized(entity.isPrioritized());
 		model.setBatchFailureTypeCode(bftcra.toModel(entity.getBatchFailureTypeCode()));

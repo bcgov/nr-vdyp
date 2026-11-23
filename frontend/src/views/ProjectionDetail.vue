@@ -111,6 +111,7 @@
         :polygonCount="batchPolygonCount"
         :completedPolygonCount="batchCompletedPolygonCount"
         :errorCount="batchErrorCount"
+        :alertCounts="batchAlertCounts"
         :batchFailureTypeDescription="batchFailureTypeDescription"
         :failureMessage="batchFailureMessage"
         :startDate="runStartDate"
@@ -206,6 +207,7 @@
           :polygonCount="batchPolygonCount"
           :completedPolygonCount="batchCompletedPolygonCount"
           :errorCount="batchErrorCount"
+          :alertCounts="batchAlertCounts"
           :batchFailureTypeDescription="batchFailureTypeDescription"
           :failureMessage="batchFailureMessage"
           :startDate="runStartDate"
@@ -277,7 +279,7 @@ import {
   RunProjectionButtonPanel,
   AdminCancellationBanner
 } from '@/components/projection'
-import type { Tab } from '@/interfaces/interfaces'
+import type { AlertCounts, Tab } from '@/interfaces/interfaces'
 import { CONSTANTS, DEFAULTS, MESSAGE } from '@/constants'
 import { loadProjectionSession, clearProjectionSession, saveExistingProjectionSession } from '@/utils/projectionSession'
 import { mapProjectionStatus, cancelProjection, getProjectionById, streamResultsZip, getResultsDownloadUrl, isProjectionReadOnly, isDebugModeSaved } from '@/services/projectionService'
@@ -294,6 +296,7 @@ import {
   downloadURL,
   sanitizeFileName,
   checkZipForErrors,
+  getAlertCounts,
   getDateTimeParts,
 } from '@/utils/util'
 import { logSuccessMessage, logErrorMessage } from '@/utils/messageHandler'
@@ -372,6 +375,7 @@ const isManualInputRunProgressBarVisible = computed(
 const batchPolygonCount = ref<number | null>(null)
 const batchCompletedPolygonCount = ref<number | null>(null)
 const batchErrorCount = ref<number | null>(null)
+const batchAlertCounts = ref<AlertCounts | null>(null)
 const batchFailureTypeDescription = ref<string | null>(null)
 const batchFailureMessage = ref<string | null>(null)
 const runStartDate = ref<string | null>(null)
@@ -382,6 +386,7 @@ const applyBatchMapping = (batchMapping: ProjectionModel['batchMapping']) => {
   batchPolygonCount.value = batchMapping?.polygonCount ?? null
   batchCompletedPolygonCount.value = batchMapping?.completedPolygonCount ?? null
   batchErrorCount.value = batchMapping?.errorCount ?? null
+  batchAlertCounts.value = getAlertCounts(batchMapping)
   batchFailureTypeDescription.value = batchMapping?.batchFailureTypeCode?.description ?? null
   batchFailureMessage.value = batchMapping?.failureMessage ?? null
 }
@@ -684,7 +689,7 @@ const fileUploadDisabledText = computed(() => {
 
 /**
  * Enables reporting tabs, navigates to the appropriate tab, and shows a result message.
- * Navigates to Error Messages tab only if the yield table is empty (the projection actually failed),
+ * Navigates to Alert Log tab only if the yield table is empty (the projection actually failed),
  * otherwise Model Report tab. A non-empty error log alone does not mean the projection failed.
  */
 const enableTabsAndNavigate = async (hasErrors: boolean, showMessage: boolean = true) => {

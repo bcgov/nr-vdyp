@@ -6,10 +6,12 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.MessageFormat;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,6 +26,7 @@ import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters.ExecutionOption;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ProgressFrequency;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ProjectionRequestKind;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ValidationMessage;
+import ca.bc.gov.nrs.vdyp.ecore.projection.AlertCounts.AlertType;
 import ca.bc.gov.nrs.vdyp.ecore.projection.input.AbstractPolygonStream;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Polygon;
 import ca.bc.gov.nrs.vdyp.logging.RequestDebugLog;
@@ -101,6 +104,8 @@ public class ProjectionRunner implements Closeable {
 
 			while (polygonStream.hasNextPolygon()) {
 				polygon = null;
+				// Alert types this polygon had. A Set, so each type counts the polygon only once.
+				Set<AlertType> polygonAlertTypes = EnumSet.noneOf(AlertType.class);
 				try {
 					polygon = polygonStream.getNextPolygon();
 
@@ -151,21 +156,23 @@ public class ProjectionRunner implements Closeable {
 					} catch (YieldTableGenerationException e) {
 						// A failed polygon must not discard the other polygons' output in this chunk.
 						logger.error("{}: Yield Table generation failed", polygon, e);
-						logValidationMessages(e);
+						logValidationMessages(e, polygonAlertTypes);
 					} catch (PolygonExecutionException e) {
 						if (e.getCause() instanceof PolygonValidationException pve) {
 							throw pve;
 						}
-						logValidationMessages(e);
+						logValidationMessages(e, polygonAlertTypes);
 					}
 				} catch (PolygonValidationException e) {
-					logValidationMessages(e);
+					logValidationMessages(e, polygonAlertTypes);
 
 				} finally {
 					// Log Error and warning messages even if they don't result in an exception being thrown
 					if (polygon != null) {
 						for (var message : polygon.getMessages()) {
-							context.logError(message.toString());
+							AlertType alertType = AlertType.of(message.getSeverity());
+							context.logAlertMessage(alertType, message.toString());
+							polygonAlertTypes.add(alertType);
 						}
 					} else {
 						// The record failed validation before a Polygon could even be built, so it was never
@@ -173,11 +180,13 @@ public class ProjectionRunner implements Closeable {
 						// processed/skipped totals reconcile with the number of records actually seen.
 						nPolygonsSkipped += 1;
 					}
+					context.recordPolygonAlertTypes(polygonAlertTypes);
 				}
 			}
 
+			// Messages for input rows that match no polygon: counted as Error messages, but not in any polygon count.
 			for (var message : polygonStream.drainRemainingValidationMessages()) {
-				context.logError(message.getMessage());
+				context.logAlertMessage(AlertType.ERROR, message.getMessage());
 			}
 
 			int nPolygonsSeen = nPolygonsProcessed + nPolygonsSkipped;
@@ -201,12 +210,14 @@ public class ProjectionRunner implements Closeable {
 	 * Logs each of the given exception's validation messages to the error log, one line per message. If the exception
 	 * carries a separate polygon/layer context prefix (see AbstractProjectionRequestException.getContextPrefix()), that
 	 * prefix is prepended to each line; otherwise the message is logged as-is, since in that case any such context was
-	 * already baked into the message itself at construction time.
+	 * already baked into the message itself at construction time. Validation messages are always counted as ERROR
+	 * alerts.
 	 */
-	private void logValidationMessages(AbstractProjectionRequestException e) {
+	private void logValidationMessages(AbstractProjectionRequestException e, Set<AlertType> polygonAlertTypes) {
 		String contextPrefix = e.getContextPrefix();
 		for (ValidationMessage m : e.getValidationMessages()) {
-			context.logError(m.getErrorLogMessage(contextPrefix));
+			context.logAlertMessage(AlertType.ERROR, m.getErrorLogMessage(contextPrefix));
+			polygonAlertTypes.add(AlertType.ERROR);
 		}
 	}
 
@@ -264,6 +275,10 @@ public class ProjectionRunner implements Closeable {
 
 	public int getErrorLogCount() {
 		return context.getErrorLogCount();
+	}
+
+	public AlertCounts getAlertCounts() {
+		return context.getAlertCounts();
 	}
 
 	public InputStream getErrorStream() {

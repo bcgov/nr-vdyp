@@ -29,14 +29,25 @@
         </div>
       </div>
 
-      <!-- Error Count Tile -->
-      <div class="tile tile--errors">
-        <span class="tile-label">Error Count</span>
-        <div class="tile-value-row">
-          <img :src="ErrorCountIcon" alt="" class="tile-icon" />
-          <span class="tile-value">{{ formatNumber(errorCount) }}</span>
+      <!-- Alert Count Tile: hovering shows the breakdown by alert type when it is available -->
+      <v-tooltip location="top" :disabled="!alertCountTooltipLines.length">
+        <template #activator="{ props: tooltipProps }">
+          <div
+            class="tile tile--errors"
+            :tabindex="alertCountTooltipLines.length ? 0 : undefined"
+            v-bind="tooltipProps"
+          >
+            <span class="tile-label">{{ ALERT_COUNT.TILE_LABEL }}</span>
+            <div class="tile-value-row">
+              <img :src="ErrorCountIcon" alt="" class="tile-icon" />
+              <span class="tile-value">{{ formatNumber(errorCount) }}</span>
+            </div>
+          </div>
+        </template>
+        <div class="alert-count-tooltip">
+          <div v-for="line in alertCountTooltipLines" :key="line">{{ line }}</div>
         </div>
-      </div>
+      </v-tooltip>
     </div>
 
     <!-- Progress Bar Section -->
@@ -62,7 +73,13 @@
 <script setup lang="ts">
 import { computed, ref, watch, onMounted, onUnmounted } from 'vue'
 import { CONSTANTS } from '@/constants'
-import { formatNumber, getProjectionStatusDisplayText } from '@/utils/util'
+import { ALERT_COUNT } from '@/constants/message'
+import type { AlertCounts } from '@/interfaces/interfaces'
+import {
+  buildAlertCountTooltipLines,
+  formatNumber,
+  getProjectionStatusDisplayText,
+} from '@/utils/util'
 import {
   TimeElapsedIcon,
   PolygonsProcessedIcon,
@@ -82,11 +99,16 @@ const props = defineProps<{
   polygonCount: number | null
   completedPolygonCount: number | null
   errorCount: number | null
+  alertCounts?: AlertCounts | null
   startDate: string | null
   endDate: string | null
   batchFailureTypeDescription?: string | null
   failureMessage?: string | null
 }>()
+
+const alertCountTooltipLines = computed(() =>
+  props.alertCounts ? buildAlertCountTooltipLines(props.alertCounts) : [],
+)
 
 // Timer for updating elapsed time display
 const currentTime = ref(Date.now())
@@ -266,6 +288,10 @@ const failureDetailsText = computed(() => {
 .tile--errors {
   background-color: #f4e1e2;
   border-color: #d14a46;
+}
+
+.alert-count-tooltip {
+  white-space: nowrap;
 }
 
 .tile-label {

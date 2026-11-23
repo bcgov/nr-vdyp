@@ -48,6 +48,7 @@ public class ProjectionRunnerTest {
 				);
 				assertEquals("", new String(runner.getErrorStream().readAllBytes()));
 				assertEquals(0, runner.getErrorLogCount());
+				assertEquals(AlertCounts.NONE, runner.getAlertCounts());
 			}
 		}
 	}
@@ -102,6 +103,7 @@ public class ProjectionRunnerTest {
 			String errors = new String(runner.getErrorStream().readAllBytes());
 			assertEquals(skipped, runner.getLastRunPolygonsSkipped(), errors);
 			assertEquals(processed, runner.getLastRunPolygonsProcessed(), errors);
+			assertAlertCountsMatchErrorLog(runner, errors);
 			for (int i = 0; i < layers.length(); i++) {
 				String prefix = "Polygon " + (13919428L + i) + " Layer 1";
 				assertEquals(
@@ -163,6 +165,8 @@ public class ProjectionRunnerTest {
 			assertEquals(rows.length(), runner.getLastRunPolygonsSeen());
 			assertEquals(invalidCount, runner.getLastRunPolygonsSkipped());
 			assertEquals(rows.length() - invalidCount, runner.getLastRunPolygonsProcessed());
+			assertAlertCountsMatchErrorLog(runner, errors);
+			assertEquals(invalidCount, runner.getAlertCounts().errorPolygonCount(), errors);
 			for (int i = 0; i < rows.length(); i++) {
 				String prefix = "Polygon " + (13919428L + i);
 				assertEquals(
@@ -203,6 +207,37 @@ public class ProjectionRunnerTest {
 			assertThat(errors, containsString("has already been supplied"));
 			assertEquals(2, runner.getErrorLogCount(), errors);
 			assertEquals(1, runner.getLastRunPolygonsSkipped());
+			assertEquals(new AlertCounts(2, 1, 0, 0, 0, 0), runner.getAlertCounts(), errors);
+		}
+	}
+
+	@Test
+	void testPolygonWithMultipleWarningsIsCountedOnce() throws Exception {
+		try (
+				var runner = new ProjectionRunner(
+						ProjectionRequestKind.HCSV, "TEST", validationLoggingParameters(), false
+				)
+		) {
+			runner.run(
+					Map.of(
+							ParameterNames.HCSV_POLYGON_INPUT_DATA,
+							TestUtils.makeInputStream(
+									TestUtils.POLYGON_CSV_HEADER_LINE,
+									"13919428,093C090,94833422,DQU,UNK,UNK,V,UNK,0.6,10,3,HE,35,8,,MS,14,50.0,1.000,,V,T,U,TC,SP,2013,2013,60.0,,,,,,,,,,TC,100,,,,"
+							), ParameterNames.HCSV_LAYERS_INPUT_DATA,
+							TestUtils.makeInputStream(
+									TestUtils.LAYER_CSV_HEADER_LINE,
+									"13919428,14321066,093C090,94833422,1,V,,1,,,,20,10,300,PLI,100.00,,,,,,,,,,,180,18.00,,,,,,,,,,",
+									"13919428,14321067,093C090,94833422,2,V,,1,,,,20,10,300,PLI,100.00,,,,,,,,,,,180,18.00,,,,,,,,,,",
+									"13919428,14321068,093C090,94833422,3,V,,1,,,,20,10,300,PLI,100.00,,,,,,,,,,,180,18.00,,,,,,,,,,"
+							)
+					), new StubComponentRunner()
+			);
+			String errors = new String(runner.getErrorStream().readAllBytes());
+			AlertCounts counts = runner.getAlertCounts();
+			assertEquals(2, counts.warningMessageCount(), errors);
+			assertEquals(1, counts.warningPolygonCount(), errors);
+			assertAlertCountsMatchErrorLog(runner, errors);
 		}
 	}
 
@@ -228,7 +263,16 @@ public class ProjectionRunnerTest {
 			assertThat(errors, containsString("Feature ID"));
 			assertEquals(1, runner.getErrorLogCount());
 			assertEquals(1, runner.getLastRunPolygonsSkipped());
+			assertEquals(new AlertCounts(1, 1, 0, 0, 0, 0), runner.getAlertCounts(), errors);
 		}
+	}
+
+	private static void assertAlertCountsMatchErrorLog(ProjectionRunner runner, String errors) {
+		AlertCounts counts = runner.getAlertCounts();
+		assertEquals(
+				runner.getErrorLogCount(),
+				counts.errorMessageCount() + counts.warningMessageCount() + counts.infoMessageCount(), errors
+		);
 	}
 
 	private static Parameters validationLoggingParameters() {
@@ -265,6 +309,7 @@ public class ProjectionRunnerTest {
 			assertThat(errors, containsString(expectedContext));
 			assertEquals(1, runner.getErrorLogCount(), errors);
 			assertEquals(0, runner.getLastRunPolygonsSeen());
+			assertEquals(new AlertCounts(1, 0, 0, 0, 0, 0), runner.getAlertCounts(), errors);
 		}
 	}
 

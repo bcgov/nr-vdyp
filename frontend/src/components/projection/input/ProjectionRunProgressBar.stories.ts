@@ -21,7 +21,12 @@ const meta: Meta<typeof ProjectionRunProgressBar> = {
     },
     errorCount: {
       control: { type: 'number', min: 0 },
-      description: 'Number of errors encountered.',
+      description: 'Total number of alerts (errors, warnings and info messages), shown on the Alert Count tile.',
+    },
+    alertCounts: {
+      control: 'object',
+      description:
+        'Alert breakdown by type with polygon counts, shown in the Alert Count tile tooltip. No tooltip when null.',
     },
     startDate: {
       control: 'text',
@@ -59,6 +64,14 @@ export const Running: Story = {
     polygonCount: 10000,
     completedPolygonCount: 4200,
     errorCount: 3,
+    alertCounts: {
+      errorMessageCount: 1,
+      errorPolygonCount: 1,
+      warningMessageCount: 2,
+      warningPolygonCount: 1,
+      infoMessageCount: 0,
+      infoPolygonCount: 0,
+    },
     startDate: twoHoursAgo,
   },
 }
@@ -67,9 +80,17 @@ export const Ready: Story = {
   render,
   args: {
     status: 'Ready',
-    polygonCount: 10000,
-    completedPolygonCount: 10000,
-    errorCount: 3,
+    polygonCount: 36210,
+    completedPolygonCount: 36210,
+    errorCount: 4092,
+    alertCounts: {
+      errorMessageCount: 892,
+      errorPolygonCount: 200,
+      warningMessageCount: 1200,
+      warningPolygonCount: 600,
+      infoMessageCount: 2000,
+      infoPolygonCount: 1500,
+    },
     startDate: twoHoursAgo,
   },
 }

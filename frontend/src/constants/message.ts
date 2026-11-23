@@ -208,7 +208,7 @@ export const SUCCESS_MSG = Object.freeze({
   INPUT_MODEL_PARAM_RUN_RESULT:
     'Model run completed successfully. Please check the results in the report tab.',
   INPUT_MODEL_PARAM_RUN_RESULT_W_ERR:
-    'Model run completed with errors - check error log',
+    'Model run completed with errors - check alert log',
   PROJECTION_RUN_RESULT_TITLE: 'Projection Completed Successfully',
   PROJECTION_RUN_RESULT_W_ERR_TITLE: 'Projection Completed Successfully with Errors',
   PROJECTION_DELETED: 'Projection has been successfully deleted.',
@@ -347,6 +347,15 @@ export const ADMIN_DASHBOARD_ELAPSED = Object.freeze({
 export const ADMIN_DASHBOARD_POLYGONS = Object.freeze({
   ESTIMATE_TOOLTIP:
     'Polygon counts for queued projections are pre-execution estimates based on the uploaded input dataset.',
+})
+
+export const ALERT_COUNT = Object.freeze({
+  TILE_LABEL: 'Alert Count',
+  ERRORS: 'Errors',
+  WARNINGS: 'Warnings',
+  INFO_MESSAGES: 'Info Messages',
+  TOOLTIP_LINE: (alertType: string, messageCount: string, polygonCount: string, isSinglePolygon: boolean) =>
+    `${alertType}: ${messageCount} (${polygonCount} ${isSinglePolygon ? 'Polygon' : 'Polygons'})`,
 })
 
 export const VALIDATION_WARN = Object.freeze({

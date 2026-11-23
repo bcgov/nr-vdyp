@@ -23,8 +23,10 @@ import com.google.common.base.Strings;
 
 import ca.bc.gov.nrs.vdyp.batch.client.vdyp.VdypClient;
 import ca.bc.gov.nrs.vdyp.batch.model.VDYPProjectionProgressUpdate;
+import ca.bc.gov.nrs.vdyp.batch.util.AlertCountsContext;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchUtils;
+import ca.bc.gov.nrs.vdyp.ecore.projection.AlertCounts;
 
 @Component
 @EnableScheduling
@@ -99,7 +101,7 @@ public class ProjectionProgressPushScheduler {
 		if (!progress.equals(previousProgress)) {
 			VDYPProjectionProgressUpdate payload = new VDYPProjectionProgressUpdate(
 					batchJobGUID, progress.totalPolygons(), progress.polygonsProcessed(), progress.errorCount(),
-					progress.polygonsSkipped(), progress.workers()
+					progress.polygonsSkipped(), progress.workers(), progress.alertCounts()
 			);
 			progressExecutor.execute(() -> {
 				try {
@@ -138,20 +140,26 @@ public class ProjectionProgressPushScheduler {
 		int polygonsProcessed = jobContext.getInt(BatchConstants.Job.PREVIOUS_POLYGONS_PROCESSED, 0);
 		int errorCount = jobContext.getInt(BatchConstants.Job.PREVIOUS_PROJECTION_ERRORS, 0);
 		int polygonsSkipped = jobContext.getInt(BatchConstants.Job.PREVIOUS_POLYGONS_SKIPPED, 0);
+		AlertCounts alertCounts = AlertCountsContext.read(jobContext, BatchConstants.Job.PREVIOUS_ALERT_COUNTS_PREFIX);
 		for (StepExecution step : runningJob.getStepExecutions()) {
 			if (step.getStepName().startsWith(BatchConstants.Job.WORKER_STEP_NAME)) {
 				ExecutionContext stepCtx = step.getExecutionContext();
 				polygonsProcessed += stepCtx.getInt(BatchConstants.Job.POLYGONS_PROCESSED, 0);
 				errorCount += stepCtx.getInt(BatchConstants.Job.PROJECTION_ERRORS, 0);
 				polygonsSkipped += stepCtx.getInt(BatchConstants.Job.POLYGONS_SKIPPED, 0);
+				alertCounts = alertCounts
+						.plus(AlertCountsContext.read(stepCtx, BatchConstants.Job.ALERT_COUNTS_PREFIX));
 			}
 		}
 
-		return new ProgressSnapshot(totalPolygons, polygonsProcessed, errorCount, polygonsSkipped, workers);
+		return new ProgressSnapshot(
+				totalPolygons, polygonsProcessed, errorCount, polygonsSkipped, workers, alertCounts
+		);
 	}
 
 	private record ProgressSnapshot(
-			int totalPolygons, int polygonsProcessed, int errorCount, int polygonsSkipped, int workers
+			int totalPolygons, int polygonsProcessed, int errorCount, int polygonsSkipped, int workers,
+			AlertCounts alertCounts
 	) {
 		boolean isEmpty() {
 			return totalPolygons == 0 && progressTotal() == 0 && workers == 0;

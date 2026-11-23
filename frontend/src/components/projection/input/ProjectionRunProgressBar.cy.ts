@@ -2,6 +2,7 @@ import { mount } from 'cypress/vue'
 import { createVuetify } from 'vuetify'
 import 'vuetify/styles'
 import ProjectionRunProgressBar from './ProjectionRunProgressBar.vue'
+import type { AlertCounts } from '@/interfaces/interfaces'
 
 const vuetify = createVuetify()
 
@@ -10,6 +11,7 @@ const mountBar = (props: {
   polygonCount?: number | null
   completedPolygonCount?: number | null
   errorCount?: number | null
+  alertCounts?: AlertCounts | null
   startDate?: string | null
   endDate?: string | null
   batchFailureTypeDescription?: string | null
@@ -77,8 +79,8 @@ describe('<ProjectionRunProgressBar />', () => {
     })
   })
 
-  describe('Error count tile', () => {
-    it('shows error count', () => {
+  describe('Alert count tile', () => {
+    it('shows alert count', () => {
       mountBar({ errorCount: 42 })
       cy.get('.tile--errors .tile-value').should('have.text', '42')
     })
@@ -86,6 +88,29 @@ describe('<ProjectionRunProgressBar />', () => {
     it('shows 0 when errorCount is null', () => {
       mountBar({ errorCount: null })
       cy.get('.tile--errors .tile-value').should('have.text', '0')
+    })
+
+    it('shows the alert breakdown tooltip on hover', () => {
+      mountBar({
+        errorCount: 4092,
+        alertCounts: {
+          errorMessageCount: 892,
+          errorPolygonCount: 200,
+          warningMessageCount: 1200,
+          warningPolygonCount: 600,
+          infoMessageCount: 2000,
+          infoPolygonCount: 1500,
+        },
+      })
+      cy.get('.tile--errors').trigger('mouseenter')
+      cy.get('.alert-count-tooltip')
+        .should('be.visible')
+        .and('contain', 'Errors: 892 (200 Polygons)')
+        .and('contain', 'Warnings: 1,200 (600 Polygons)')
+        .and('contain', 'Info Messages: 2,000 (1,500 Polygons)')
+
+      cy.get('.tile--errors').trigger('mouseleave')
+      cy.get('.alert-count-tooltip').should('not.be.visible')
     })
   })
 
@@ -151,7 +176,7 @@ describe('<ProjectionRunProgressBar />', () => {
       cy.contains('.tile-label', 'Status').should('exist')
       cy.contains('.tile-label', 'Time Elapsed').should('exist')
       cy.contains('.tile-label', 'Polygons Processed').should('exist')
-      cy.contains('.tile-label', 'Error Count').should('exist')
+      cy.contains('.tile-label', 'Alert Count').should('exist')
     })
   })
 })

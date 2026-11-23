@@ -33,6 +33,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchResultAggregationException;
 import ca.bc.gov.nrs.vdyp.batch.model.VDYPProjectionProgressUpdate;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
+import ca.bc.gov.nrs.vdyp.ecore.projection.AlertCounts;
 import ca.bc.gov.nrs.vdyp.ecore.projection.RunProcessingMessages;
 import ca.bc.gov.nrs.vdyp.ecore.projection.ValidatedParameters;
 
@@ -147,6 +148,32 @@ class BatchResultAggregationServiceTest {
 		assertTrue(resultZip.getFileName().toString().endsWith(".zip"));
 
 		verifyZipContent(resultZip);
+	}
+
+	@Test
+	void testAggregateResults_ProgressLogIncludesAlertsSummary() throws BatchResultAggregationException, IOException {
+		setupPartitionDirectories();
+		VDYPProjectionProgressUpdate update = new VDYPProjectionProgressUpdate(
+				JOB_GUID, 2000, 1999, 4092, 1, 0, new AlertCounts(892, 200, 1200, 1, 2000, 1500)
+		);
+
+		Path resultZip = resultAggregationService.aggregateResultsFromJobDir(
+				JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP, update, duration, JOB_PARAMETERS
+		);
+
+		String progressLog = getZipEntryContent(resultZip, "ProgressLog.txt");
+		assertTrue(progressLog.contains("Processed 2,000 polygons..."));
+		assertTrue(
+				progressLog.contains(
+						"Processing summary: 1,999 polygons Projected Successfully + 1 Failed to Project = 2,000 Processed"
+				)
+		);
+		assertTrue(progressLog.contains("Generated 4,092 Alerts ..."));
+		assertTrue(
+				progressLog.contains(
+						"Alerts summary: 892 Errors (200 Polygons) + 1,200 Warnings (1 Polygon) + 2,000 Info Messages (1,500 Polygons) = 4,092 Alerts"
+				)
+		);
 	}
 
 	@Test
