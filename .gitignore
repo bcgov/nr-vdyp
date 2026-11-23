@@ -262,5 +262,7 @@ backend/src/test/resources/test-data/hcsv/44grpa/polyids.txt
 R/VDYPinR_1.0/VDYPinR/man/*
 R/VDYPinR_1.0/VDYPinR/inst/doc/*
 
-# Claude Code local settings
+# Claude Code: .claude/ is tracked (shared settings, skills). Keep personal and generated files out.
 .claude/settings.local.json
+.claude/*.log
+.claude/worktrees/

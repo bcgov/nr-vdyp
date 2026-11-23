@@ -46,6 +46,17 @@ npm run build
 
 Before finishing a change, run `lint:check`, `type-check`, `test:unit` and `test:comp`. These are the CI checks.
 
+Known problems running the checks locally:
+
+- `test:unit` runs Cypress with `--browser chrome`. If Chrome is not installed, run the same specs without the browser flag so Cypress uses Electron:
+
+  ```bash
+  npx cypress run --component --spec "src/services/**/*.cy.ts","src/stores/**/*.cy.ts","src/composables/**/*.cy.ts","src/validation/*.cy.ts","src/utils/*.cy.ts"
+  ```
+
+- Do not use Edge as a fallback: Cypress has failed with it in this repository with an internal error ("* is not a valid URL").
+- The Cypress runs take several minutes each. Write the full output to a log file rather than filtering it through `grep`, so the reason for a non-zero exit is not hidden.
+
 ## Code style
 
 - Prettier (`.prettierrc.yml`): two spaces, single quotes, no semicolons, trailing commas, LF line endings. This differs from the tab indentation used in the Java code.
