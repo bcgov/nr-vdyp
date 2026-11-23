@@ -55,6 +55,12 @@ Before finishing a change, run `lint:check`, `type-check`, `test:unit` and `test
 
 ## Rules for changes
 
+- Pin every version in `package.json` to an exact version (`"vite": "6.4.5"`), including `dependencies`,
+  `devDependencies` and `overrides`. Do not use range prefixes such as `^` or `~`, so that a new upstream release cannot
+  change or break the build without a deliberate update. `frontend/.npmrc` sets `save-exact=true`, so
+  `npm install <package>@<version>` records an exact version; keep that setting. It does not cover hand edits or
+  `overrides`, so check those yourself. The selector on the left of an override key may be a range (
+  `"minimatch@>=7.0.0 <11.0.1"`), but the version it resolves to must be exact.
 - Keep API calls in `services/` and state in stores. Components should not call Axios directly.
 - `services/vdyp-api/` must match the backend API. When a backend endpoint or model changes, update this client in the same change.
 - Business rules for inputs (ranges, defaults, options) live in `constants/` and `validation/`. Keep them consistent with the backend validation in `vdyp-extended-core`.
