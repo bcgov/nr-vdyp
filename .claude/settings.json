@@ -1,0 +1,42 @@
+{
+	"permissions": {
+		"allow": [
+			"Bash(./mvn test:*)",
+			"Bash(./mvn -q test:*)",
+			"Bash(./mvn verify:*)",
+			"Bash(./mvn formatter:format)",
+			"Bash(./mvn formatter:validate)",
+			"Bash(npm --prefix frontend run test:*)",
+			"Bash(npm --prefix frontend run lint:*)",
+			"Bash(npm --prefix frontend run type-check)",
+			"Bash(git status)",
+			"Bash(git diff:*)",
+			"Bash(git log:*)",
+			"Bash(git branch:*)",
+			"Bash(git checkout -b:*)"
+		],
+		"deny": [
+			"Read(./.env)",
+			"Read(./.env.*)",
+			"Read(./**/*.pem)",
+			"Read(./**/*.key)",
+			"Read(./**/secrets/**)",
+			"Read(./**/application-local.yml)",
+			"Read(~/.kube/**)",
+			"Read(~/.aws/**)",
+			"Bash(git push:*)",
+			"Bash(git reset --hard:*)",
+			"Bash(rm -rf:*)",
+			"Bash(curl:*)",
+			"Bash(wget:*)",
+			"Bash(oc:*)",
+			"Bash(kubectl:*)",
+			"Bash(npm publish:*)",
+			"Bash(./mvnw deploy:*)",
+			"Edit(**/.claude/settings.json)",
+			"Edit(**/.claude/settings.local.json)",
+			"Edit(~/.claude/settings.json)",
+			"Edit(~/.claude/settings.local.json)"
+		]
+	}
+}
