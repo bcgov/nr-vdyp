@@ -13,7 +13,7 @@
 			"Bash(git diff:*)",
 			"Bash(git log:*)",
 			"Bash(git branch:*)",
-			"Bash(git checkout -b:*)",
+			"Bash(git checkout -b:*)"
 		],
 		"deny": [
 			"Read(./.env)",
