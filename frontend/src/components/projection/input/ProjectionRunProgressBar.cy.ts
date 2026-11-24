@@ -77,6 +77,52 @@ describe('<ProjectionRunProgressBar />', () => {
       mountBar({ polygonCount: null, completedPolygonCount: null })
       cy.get('.tile--polygons .tile-value').should('have.text', '0/0')
     })
+
+    const alertCounts: AlertCounts = {
+      errorMessageCount: 892,
+      errorPolygonCount: 30,
+      warningMessageCount: 1200,
+      warningPolygonCount: 600,
+      infoMessageCount: 2000,
+      infoPolygonCount: 1500,
+    }
+
+    it('shows successfully projected and failed to project polygons on hover when Ready', () => {
+      mountBar({ status: 'Ready', polygonCount: 36210, completedPolygonCount: 36210, alertCounts })
+      cy.get('.tile--polygons').trigger('mouseenter')
+      cy.get('.polygons-processed-tooltip')
+        .should('be.visible')
+        .and('contain', 'Polygons Successfully Projected - 36,180')
+        .and('contain', 'Polygons Failed to Project - 30')
+        .and('not.contain', 'Skipped')
+
+      cy.get('.tile--polygons').trigger('mouseleave')
+      cy.get('.polygons-processed-tooltip').should('not.be.visible')
+    })
+
+    it('shows the polygon breakdown on hover while Running', () => {
+      mountBar({ status: 'Running', polygonCount: 1000, completedPolygonCount: 500, alertCounts })
+      cy.get('.tile--polygons').trigger('mouseenter')
+      cy.get('.polygons-processed-tooltip')
+        .should('be.visible')
+        .and('contain', 'Polygons Successfully Projected - 470')
+        .and('contain', 'Polygons Failed to Project - 30')
+    })
+
+    it('does not show the polygon breakdown for other statuses', () => {
+      mountBar({ status: 'Failed', alertCounts })
+      cy.get('.tile--polygons').should('not.have.attr', 'tabindex')
+      cy.get('.tile--polygons').trigger('mouseenter')
+      // Vuetify keeps hidden tooltips from earlier tests in the overlay container, so check visibility only
+      cy.get('.polygons-processed-tooltip:visible').should('not.exist')
+    })
+
+    it('does not show the polygon breakdown without alert counts', () => {
+      mountBar({ status: 'Ready', alertCounts: null })
+      cy.get('.tile--polygons').should('not.have.attr', 'tabindex')
+      cy.get('.tile--polygons').trigger('mouseenter')
+      cy.get('.polygons-processed-tooltip:visible').should('not.exist')
+    })
   })
 
   describe('Alert count tile', () => {

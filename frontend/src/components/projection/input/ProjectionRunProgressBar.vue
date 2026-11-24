@@ -20,14 +20,25 @@
         </div>
       </div>
 
-      <!-- Polygons Processed Tile -->
-      <div class="tile tile--polygons">
-        <span class="tile-label">Polygons Processed</span>
-        <div class="tile-value-row">
-          <img :src="PolygonsProcessedIcon" alt="" class="tile-icon" />
-          <span class="tile-value">{{ polygonsDisplay }}</span>
+      <!-- Polygons Processed Tile: while Running or Ready, hovering shows successfully projected and failed to project counts -->
+      <v-tooltip location="top" :disabled="!polygonsProcessedTooltipLines.length">
+        <template #activator="{ props: tooltipProps }">
+          <div
+            class="tile tile--polygons"
+            :tabindex="polygonsProcessedTooltipLines.length ? 0 : undefined"
+            v-bind="tooltipProps"
+          >
+            <span class="tile-label">{{ POLYGONS_PROCESSED.TILE_LABEL }}</span>
+            <div class="tile-value-row">
+              <img :src="PolygonsProcessedIcon" alt="" class="tile-icon" />
+              <span class="tile-value">{{ polygonsDisplay }}</span>
+            </div>
+          </div>
+        </template>
+        <div class="polygons-processed-tooltip">
+          <div v-for="line in polygonsProcessedTooltipLines" :key="line">{{ line }}</div>
         </div>
-      </div>
+      </v-tooltip>
 
       <!-- Alert Count Tile: hovering shows the breakdown by alert type when it is available -->
       <v-tooltip location="top" :disabled="!alertCountTooltipLines.length">
@@ -73,10 +84,11 @@
 <script setup lang="ts">
 import { computed, ref, watch, onMounted, onUnmounted } from 'vue'
 import { CONSTANTS } from '@/constants'
-import { ALERT_COUNT } from '@/constants/message'
+import { ALERT_COUNT, POLYGONS_PROCESSED } from '@/constants/message'
 import type { AlertCounts } from '@/interfaces/interfaces'
 import {
   buildAlertCountTooltipLines,
+  buildPolygonsProcessedTooltipLines,
   formatNumber,
   getProjectionStatusDisplayText,
 } from '@/utils/util'
@@ -109,6 +121,15 @@ const props = defineProps<{
 const alertCountTooltipLines = computed(() =>
   props.alertCounts ? buildAlertCountTooltipLines(props.alertCounts) : [],
 )
+
+// Shown only while Running or Ready, and only when the alert breakdown is available
+const polygonsProcessedTooltipLines = computed(() => {
+  const isRunningOrReady =
+    props.status === CONSTANTS.PROJECTION_STATUS.RUNNING ||
+    props.status === CONSTANTS.PROJECTION_STATUS.READY
+  if (!isRunningOrReady || !props.alertCounts) return []
+  return buildPolygonsProcessedTooltipLines(props.completedPolygonCount, props.alertCounts)
+})
 
 // Timer for updating elapsed time display
 const currentTime = ref(Date.now())
@@ -290,7 +311,8 @@ const failureDetailsText = computed(() => {
   border-color: #d14a46;
 }
 
-.alert-count-tooltip {
+.alert-count-tooltip,
+.polygons-processed-tooltip {
   white-space: nowrap;
 }
 

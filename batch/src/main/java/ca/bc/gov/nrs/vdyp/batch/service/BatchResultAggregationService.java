@@ -758,18 +758,31 @@ public class BatchResultAggregationService {
 		ZipEntry zipEntry = new ZipEntry(mergedLogFileName);
 		zipOut.putNextEntry(zipEntry);
 
-		int processed = progressUpdate.polygonsProcessed();
-		int skipped = progressUpdate.polygonsSkipped();
+		int total = progressUpdate.polygonsProcessed() + progressUpdate.polygonsSkipped();
+		int failedToProject = failedToProjectCount(progressUpdate, total);
 		String progress = String.format(
 				"""
 						Projection Type: HCSV
 						Processed %s polygons...
 						Processing summary: %s polygons Projected Successfully + %s Failed to Project = %s Processed
-						%sTotal Duration: %s""", withCommas(processed + skipped), withCommas(processed),
-				withCommas(skipped), withCommas(processed + skipped), alertsSummary(progressUpdate),
+						%sTotal Duration: %s""", withCommas(total), withCommas(total - failedToProject),
+				withCommas(failedToProject), withCommas(total), alertsSummary(progressUpdate),
 				BatchUtils.formatDuration(duration)
 		);
 		zipOut.write(progress.getBytes(StandardCharsets.UTF_8));
+	}
+
+	/**
+	 * Number of polygons that failed to project: the polygons with at least one Error alert, capped at the total so the
+	 * summary adds up. This matches the Polygons Processed tooltip in the UI. When the update has no alert counts, the
+	 * skipped polygon count is the only failure count available, so it is used instead.
+	 */
+	private static int failedToProjectCount(VDYPProjectionProgressUpdate progressUpdate, int total) {
+		AlertCounts alertCounts = progressUpdate.alertCounts();
+		if (alertCounts == null) {
+			return progressUpdate.polygonsSkipped();
+		}
+		return Math.min(total, Math.max(0, alertCounts.errorPolygonCount()));
 	}
 
 	// Empty when the update has no alert counts
