@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.vdyp.io.write;
 
+import java.io.BufferedOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -271,12 +272,14 @@ public class VdypOutputWriter implements Closeable {
 	private static OutputStream getOutputStream(Map<String, Object> controlMap, FileResolver resolver, String key)
 			throws IOException {
 		String fileName = Utils.expectParsedControl(controlMap, key, String.class);
-		return resolver.resolveForOutput(fileName);
+		// Buffer the stream: records are written one formatted line at a time, which is otherwise one system call
+		// per line.
+		return new BufferedOutputStream(resolver.resolveForOutput(fileName));
 	}
 
 	private static OutputStream getOutputStream(Map<String, Object> controlMap, String key) throws IOException {
 		var outputFilePath = Utils.expectParsedControl(controlMap, key, Path.class);
-		return Files.newOutputStream(outputFilePath);
+		return new BufferedOutputStream(Files.newOutputStream(outputFilePath));
 	}
 
 	/**
