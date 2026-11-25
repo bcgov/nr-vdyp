@@ -5,7 +5,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.MessageFormat;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -42,8 +41,10 @@ import ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.RealProjectionResul
 import ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.YieldTable;
 import ca.bc.gov.nrs.vdyp.fip.FipStart;
 import ca.bc.gov.nrs.vdyp.forward.VdypForwardApplication;
+import ca.bc.gov.nrs.vdyp.io.FileResolver;
 import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
+import ca.bc.gov.nrs.vdyp.io.parse.control.BaseControlParser;
 import ca.bc.gov.nrs.vdyp.io.parse.control.ForwardControlParser;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.vri.VriStart;
@@ -101,22 +102,55 @@ public class RealComponentRunner implements ComponentRunner {
 	}
 
 	/**
-	 * Creates a new app instance using the given constructor and runs it with the given control files, handling all
-	 * exceptions appropriately. After running it runs the given consumer and passes the app instance to it.
+	 * Builds the control map for one run of an application.
+	 */
+	@FunctionalInterface
+	interface RunControlMapFactory {
+		/**
+		 * @param parser              a new control file parser for the application
+		 * @param templateControlFile the application's control file in the execution folder template
+		 * @param runControlFiles     control files for this run only, in the run's folder
+		 * @param runResolver         resolver for the run's folder
+		 * @return the control map for the run
+		 */
+		Map<String, Object> create(
+				BaseControlParser<?> parser, String templateControlFile, List<String> runControlFiles,
+				FileResolver runResolver
+		) throws IOException, ResourceParseException;
+	}
+
+	private final RunControlMapFactory controlMapFactory;
+
+	public RealComponentRunner() {
+		this(TemplateControlMaps::forRun);
+	}
+
+	RealComponentRunner(RunControlMapFactory controlMapFactory) {
+		this.controlMapFactory = controlMapFactory;
+	}
+
+	/**
+	 * Creates a new app instance using the given constructor and runs it, handling all exceptions appropriately. The
+	 * app's control map is built from its control file in the execution folder template, whose definitions and
+	 * coefficients are parsed once and shared, with the given run control files applied over it. The app's input and
+	 * output files are resolved in the projection type's folder. After running it runs the given consumer and passes
+	 * the app instance to it.
 	 *
-	 * @param <A>                The application class
-	 * @param polygon            Polygon to process
-	 * @param projectionTypeCode Projection type
-	 * @param state              Projection state to update
-	 * @param appToUse           ID of the app being used
-	 * @param controlFiles       List of control file ids
-	 * @param getApp             Constructor for the app
-	 * @param after              Actions to perform after running the app
+	 * @param <A>                 The application class
+	 * @param polygon             Polygon to process
+	 * @param projectionTypeCode  Projection type
+	 * @param state               Projection state to update
+	 * @param appToUse            ID of the app being used
+	 * @param templateControlFile The app's control file in the execution folder template
+	 * @param runControlFiles     Control files written for this run, in the projection type's folder
+	 * @param getApp              Constructor for the app
+	 * @param after               Actions to perform after running the app
 	 * @throws PolygonExecutionException
 	 */
 	<A extends VdypApplication<?>> void runApp(
 			Polygon polygon, ProjectionTypeCode projectionTypeCode, PolygonProjectionState state,
-			VdypApplicationIdentifier appToUse, List<String> controlFiles, Supplier<A> getApp, Consumer<A> after
+			VdypApplicationIdentifier appToUse, String templateControlFile, List<String> runControlFiles,
+			Supplier<A> getApp, Consumer<A> after
 	) throws PolygonExecutionException {
 		ProjectionStageCode stageCode = switch (appToUse) {
 		case FIP_START -> ProjectionStageCode.Initial;
@@ -127,10 +161,17 @@ public class RealComponentRunner implements ComponentRunner {
 		default -> throw new UnsupportedOperationException();
 		};
 		runApp(polygon, projectionTypeCode, state, appToUse, getApp, app -> {
-			var controFilePaths = controlFiles.stream().map(
-					filename -> Path.of(state.getExecutionFolder().toString(), projectionTypeCode.toString(), filename)
-			).toArray(Path[]::new);
-			app.doMain(controFilePaths);
+			var runResolver = new FileSystemFileResolver(
+					Path.of(state.getExecutionFolder().toString(), projectionTypeCode.toString()).toAbsolutePath()
+			);
+			Map<String, Object> controlMap;
+			try {
+				controlMap = controlMapFactory
+						.create(app.createControlFileParser(), templateControlFile, runControlFiles, runResolver);
+			} catch (IOException | ResourceParseException e) {
+				throw new VdypApplicationInitializationException(e);
+			}
+			app.doMain(runResolver, controlMap);
 			state.setProcessingResults(stageCode, projectionTypeCode, Optional.empty());
 			after.accept(app);
 		});
@@ -142,7 +183,7 @@ public class RealComponentRunner implements ComponentRunner {
 
 		runApp(
 				polygon, projectionTypeCode, state, VdypApplicationIdentifier.FIP_START, //
-				List.of(Vdyp7Constants.FIP_START_CONTROL_FILE_NAME), FipStart::new, //
+				Vdyp7Constants.FIP_START_CONTROL_FILE_NAME, List.of(), FipStart::new, //
 				app -> {
 					state.modifyGrowthModel(
 							projectionTypeCode, GrowthModelCode.FIP,
@@ -157,7 +198,7 @@ public class RealComponentRunner implements ComponentRunner {
 			throws PolygonExecutionException {
 		runApp(
 				polygon, projectionTypeCode, state, VdypApplicationIdentifier.VRI_START, //
-				List.of(Vdyp7Constants.VRI_START_CONTROL_FILE_NAME), VriStart::new, //
+				Vdyp7Constants.VRI_START_CONTROL_FILE_NAME, List.of(), VriStart::new, //
 				app -> {
 					state.modifyGrowthModel(
 							projectionTypeCode, GrowthModelCode.VRI,
@@ -221,7 +262,7 @@ public class RealComponentRunner implements ComponentRunner {
 
 		runApp(
 				polygon, projectionTypeCode, state, VdypApplicationIdentifier.VDYP_FORWARD, //
-				List.of(Vdyp7Constants.FORWARD_CONTROL_FILE_NAME, Vdyp7Constants.STAND_FORWARD_CONTROL_FILE_NAME),
+				Vdyp7Constants.FORWARD_CONTROL_FILE_NAME, List.of(Vdyp7Constants.STAND_FORWARD_CONTROL_FILE_NAME),
 				VdypForwardApplication::new, app -> {
 					// Nothing else to do
 				}
@@ -237,7 +278,7 @@ public class RealComponentRunner implements ComponentRunner {
 
 		runApp(
 				polygon, projectionTypeCode, state, VdypApplicationIdentifier.VDYP_BACK, //
-				List.of(Vdyp7Constants.BACK_CONTROL_FILE_NAME, Vdyp7Constants.STAND_BACK_CONTROL_FILE_NAME),
+				Vdyp7Constants.BACK_CONTROL_FILE_NAME, List.of(Vdyp7Constants.STAND_BACK_CONTROL_FILE_NAME),
 				VdypBackApplication::new, app -> {
 					// Nothing else to do
 				}
@@ -399,7 +440,8 @@ public class RealComponentRunner implements ComponentRunner {
 			getProjectionResults(Polygon polygon, ProjectionTypeCode projectionType, PolygonProjectionState state)
 					throws YieldTableGenerationException {
 
-		Path stepExecutionFolder = Path.of(state.getExecutionFolder().toString(), projectionType.toString());
+		Path stepExecutionFolder = Path.of(state.getExecutionFolder().toString(), projectionType.toString())
+				.toAbsolutePath();
 		var vdypControlFileResolver = new FileSystemFileResolver(stepExecutionFolder);
 
 		try {
@@ -407,12 +449,11 @@ public class RealComponentRunner implements ComponentRunner {
 
 			if (state.didRunProjectionStage(ProjectionStageCode.Forward, projectionType)) {
 
-				try (var fis = vdypControlFileResolver.resolveForInput(Vdyp7Constants.FORWARD_CONTROL_FILE_NAME)) {
-					var forwardControlFileParser = new ForwardControlParser();
-					Map<String, Object> forwardControlMap = forwardControlFileParser
-							.parse(fis, vdypControlFileResolver, new HashMap<>());
-					forwardReader = new RealProjectionResultsReader(forwardControlMap);
-				}
+				Map<String, Object> forwardControlMap = controlMapFactory.create(
+						new ForwardControlParser(), Vdyp7Constants.FORWARD_CONTROL_FILE_NAME, List.of(),
+						vdypControlFileResolver
+				);
+				forwardReader = new RealProjectionResultsReader(forwardControlMap);
 			}
 
 			ProjectionResultsReader backReader = new NullProjectionResultsReader();
@@ -422,12 +463,11 @@ public class RealComponentRunner implements ComponentRunner {
 			if (state.didRunProjectionStage(ProjectionStageCode.Back, projectionType)
 					&& state.getProcessingResults(ProjectionStageCode.Back, projectionType).isEmpty()) {
 
-				try (var bis = vdypControlFileResolver.resolveForInput(Vdyp7Constants.BACK_CONTROL_FILE_NAME)) {
-					var backwardsControlFileParser = new BackControlParser();
-					Map<String, Object> backwardsControlMap = backwardsControlFileParser
-							.parse(bis, vdypControlFileResolver, new HashMap<>());
-					backReader = new RealProjectionResultsReader(backwardsControlMap);
-				}
+				Map<String, Object> backwardsControlMap = controlMapFactory.create(
+						new BackControlParser(), Vdyp7Constants.BACK_CONTROL_FILE_NAME, List.of(),
+						vdypControlFileResolver
+				);
+				backReader = new RealProjectionResultsReader(backwardsControlMap);
 			}
 
 			var projectionResults = ProjectionResultsBuilder

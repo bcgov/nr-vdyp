@@ -137,6 +137,11 @@ public class Vdyp7OutputControlParser extends BaseControlParser<ProcessingDebugS
 	}
 
 	@Override
+	protected List<ResourceControlMapModifier> sharedModifiers() {
+		return orderedControlKeys.stream().map(vdypForwardConfigurationParsers::get).filter(m -> m != null).toList();
+	}
+
+	@Override
 	protected void applyAllModifiers(Map<String, Object> map, Map<String, FileResolver> fileResolver)
 			throws ResourceParseException, IOException {
 

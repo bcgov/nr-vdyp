@@ -8,6 +8,7 @@ import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -18,49 +19,13 @@ import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.io.FileResolver;
-import ca.bc.gov.nrs.vdyp.io.parse.coe.BasalAreaYieldParser;
-import ca.bc.gov.nrs.vdyp.io.parse.coe.BecDefinitionParser;
-import ca.bc.gov.nrs.vdyp.io.parse.coe.BreakageEquationGroupParser;
-import ca.bc.gov.nrs.vdyp.io.parse.coe.BreakageParser;
-import ca.bc.gov.nrs.vdyp.io.parse.coe.BySpeciesDqCoefficientParser;
-import ca.bc.gov.nrs.vdyp.io.parse.coe.CloseUtilVolumeParser;
-import ca.bc.gov.nrs.vdyp.io.parse.coe.CompVarAdjustmentsParser;
-import ca.bc.gov.nrs.vdyp.io.parse.coe.ComponentSizeParser;
-import ca.bc.gov.nrs.vdyp.io.parse.coe.DebugSettingsParser;
-import ca.bc.gov.nrs.vdyp.io.parse.coe.DecayEquationGroupParser;
-import ca.bc.gov.nrs.vdyp.io.parse.coe.DefaultEquationNumberParser;
-import ca.bc.gov.nrs.vdyp.io.parse.coe.EquationModifierParser;
-import ca.bc.gov.nrs.vdyp.io.parse.coe.GenusDefinitionParser;
-import ca.bc.gov.nrs.vdyp.io.parse.coe.HLNonprimaryCoefficientParser;
-import ca.bc.gov.nrs.vdyp.io.parse.coe.HLPrimarySpeciesEqnP1Parser;
-import ca.bc.gov.nrs.vdyp.io.parse.coe.HLPrimarySpeciesEqnP2Parser;
-import ca.bc.gov.nrs.vdyp.io.parse.coe.HLPrimarySpeciesEqnP3Parser;
-import ca.bc.gov.nrs.vdyp.io.parse.coe.ModifierParser;
-import ca.bc.gov.nrs.vdyp.io.parse.coe.QuadraticMeanDiameterYieldParser;
-import ca.bc.gov.nrs.vdyp.io.parse.coe.SiteCurveAgeMaximumParser;
-import ca.bc.gov.nrs.vdyp.io.parse.coe.SiteCurveParser;
-import ca.bc.gov.nrs.vdyp.io.parse.coe.SmallComponentBaseAreaParser;
-import ca.bc.gov.nrs.vdyp.io.parse.coe.SmallComponentDQParser;
-import ca.bc.gov.nrs.vdyp.io.parse.coe.SmallComponentHLParser;
-import ca.bc.gov.nrs.vdyp.io.parse.coe.SmallComponentProbabilityParser;
-import ca.bc.gov.nrs.vdyp.io.parse.coe.SmallComponentWSVolumeParser;
-import ca.bc.gov.nrs.vdyp.io.parse.coe.TotalStandWholeStemParser;
-import ca.bc.gov.nrs.vdyp.io.parse.coe.UpperBoundsParser;
-import ca.bc.gov.nrs.vdyp.io.parse.coe.UpperCoefficientParser;
-import ca.bc.gov.nrs.vdyp.io.parse.coe.UtilComponentBaseAreaParser;
-import ca.bc.gov.nrs.vdyp.io.parse.coe.UtilComponentDQParser;
-import ca.bc.gov.nrs.vdyp.io.parse.coe.UtilComponentWSVolumeParser;
-import ca.bc.gov.nrs.vdyp.io.parse.coe.VeteranDQParser;
-import ca.bc.gov.nrs.vdyp.io.parse.coe.VeteranLayerVolumeAdjustParser;
-import ca.bc.gov.nrs.vdyp.io.parse.coe.VolumeEquationGroupParser;
-import ca.bc.gov.nrs.vdyp.io.parse.coe.VolumeNetDecayParser;
-import ca.bc.gov.nrs.vdyp.io.parse.coe.VolumeNetDecayWasteParser;
+import ca.bc.gov.nrs.vdyp.io.parse.coe.*;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
-import ca.bc.gov.nrs.vdyp.io.parse.projection.ProcessingControlVariableParser;
-import ca.bc.gov.nrs.vdyp.io.parse.projection.VdypPolygonDescriptionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.model.VdypPolygonParser;
 import ca.bc.gov.nrs.vdyp.io.parse.model.VdypSpeciesParser;
 import ca.bc.gov.nrs.vdyp.io.parse.model.VdypUtilizationParser;
+import ca.bc.gov.nrs.vdyp.io.parse.projection.ProcessingControlVariableParser;
+import ca.bc.gov.nrs.vdyp.io.parse.projection.VdypPolygonDescriptionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParser;
 import ca.bc.gov.nrs.vdyp.model.projection.ProcessingDebugSettings;
 
@@ -278,8 +243,34 @@ public abstract class ProcessingControlParser extends BaseControlParser<Processi
 		return new ArrayList<>(vdypProcessingConfigurationParsers.values());
 	}
 
+	/**
+	 * The configuration file parsers, in control file sequence order.
+	 */
 	@Override
-	protected void applyAllModifiers(Map<String, Object> map, Map<String, FileResolver> fileResolver)
+	protected List<ResourceControlMapModifier> sharedModifiers() {
+		return orderedControlKeys.stream().map(vdypProcessingConfigurationParsers::get).filter(Objects::nonNull)
+				.toList();
+	}
+
+	@Override
+	protected void applySharedModifiers(Map<String, Object> map, Map<String, FileResolver> fileResolver)
+			throws ResourceParseException, IOException {
+
+		for (ResourceControlMapModifier m : sharedModifiers()) {
+			logger.trace(
+					"Parsing configuration file {}[{}] using {}", m.getControlKeyName(),
+					m.getControlKey().sequence.get(), m.getClass().getSimpleName()
+			);
+			m.modify(map, fileResolver);
+		}
+	}
+
+	/**
+	 * Apply the input file parsers, in control file sequence order, then the output file locations. The configuration
+	 * file parsers have already been applied, so the input file parsers may read the parsed definitions.
+	 */
+	@Override
+	protected void applyRunModifiers(Map<String, Object> map, Map<String, FileResolver> fileResolver)
 			throws ResourceParseException, IOException {
 
 		// FORWARD_INPUT_GROWTO is optional; if missing, the polygon list is read from the
@@ -288,22 +279,13 @@ public abstract class ProcessingControlParser extends BaseControlParser<Processi
 		if (source.isEmpty()) {
 			String polyFileName = (String) map.get(ControlKey.VDYP_INPUT_VDYP_POLY.name());
 			map.put(ControlKey.VDYP_INPUT_GROWTO.name(), polyFileName);
-			fileResolver
-					.put(ControlKey.VDYP_INPUT_GROWTO.name(), fileResolver.get(ControlKey.VDYP_INPUT_VDYP_POLY.name()));
+			var polyResolver = fileResolver.get(ControlKey.VDYP_INPUT_VDYP_POLY.name());
+			if (polyResolver != null) {
+				fileResolver.put(ControlKey.VDYP_INPUT_GROWTO.name(), polyResolver);
+			}
 		}
 
 		for (ControlKey key : orderedControlKeys) {
-
-			ResourceControlMapModifier m = vdypProcessingConfigurationParsers.get(key);
-			if (m != null) {
-				// m is a configuration file parser.
-				logger.trace(
-						"Parsing configuration file {}[{}] using {}", m.getControlKeyName(), key.sequence.get(),
-						m.getClass().getSimpleName()
-				);
-				m.modify(map, fileResolver);
-			}
-
 			ControlMapValueReplacer<?, ?> r = vdypProcessingInputParsers.get(key);
 			if (r != null) {
 				// r is an input file parser.

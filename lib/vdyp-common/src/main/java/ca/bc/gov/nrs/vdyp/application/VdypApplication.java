@@ -184,6 +184,41 @@ public abstract class VdypApplication<D extends DebugSettings> extends VdypCompo
 		}
 	}
 
+	/**
+	 * Initialize the application with a control map that has already been parsed, then process. Use this instead of
+	 * {@link #doMain(String...)} when the control map comes from
+	 * {@link ca.bc.gov.nrs.vdyp.io.parse.control.BaseControlParser#parseForRun}, so that the definition and coefficient
+	 * files are not read again for every run.
+	 *
+	 * @param resolver   resolver for files named in the control map, normally the run's own folder
+	 * @param controlMap a fully parsed control map for this run. Parsed definitions and coefficients it holds may be
+	 *                   shared with other runs and must not be modified.
+	 */
+	public void doMain(FileSystemFileResolver resolver, Map<String, Object> controlMap)
+			throws VdypApplicationInitializationException, VdypApplicationProcessingException {
+
+		try {
+			init(resolver, controlMap);
+		} catch (Exception ex) {
+			logger.error("Error during initialization", ex);
+			throw new VdypApplicationInitializationException(ex);
+		}
+
+		try {
+			process();
+		} catch (Exception ex) {
+			logger.error("Error during processing", ex);
+			throw new VdypApplicationProcessingException(ex);
+		}
+	}
+
+	/**
+	 * @return a new parser for this application's control files
+	 */
+	public BaseControlParser<D> createControlFileParser() {
+		return getControlFileParser();
+	}
+
 	protected abstract void process() throws ProcessingException;
 
 	protected abstract ResolvedControlMap resolveControlMap(Map<String, Object> rawControlMap);

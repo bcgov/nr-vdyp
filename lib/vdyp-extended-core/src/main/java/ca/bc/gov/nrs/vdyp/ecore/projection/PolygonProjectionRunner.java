@@ -2,7 +2,6 @@ package ca.bc.gov.nrs.vdyp.ecore.projection;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.MessageFormat;
@@ -42,7 +41,6 @@ import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.GrowthModelCode;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ProcessingModeCode;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ProjectionTypeCode;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ReturnCode;
-import ca.bc.gov.nrs.vdyp.ecore.utils.ProjectionUtils;
 import ca.bc.gov.nrs.vdyp.ecore.utils.Utils;
 import ca.bc.gov.nrs.vdyp.exceptions.BaseAreaLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.BecMissingException;
@@ -66,8 +64,6 @@ import ca.bc.gov.nrs.vdyp.sindex.enumerations.SiteIndexEquation;
 public class PolygonProjectionRunner {
 
 	private final static Logger logger = LoggerFactory.getLogger(PolygonProjectionRunner.class);
-
-	private static final String EXECUTION_FOLDER_TEMPLATE_ZIP_FILE_NAME = "ExecutionFolderTemplate.zip";
 
 	private final Polygon polygon;
 	private final ProjectionContext context;
@@ -168,15 +164,15 @@ public class PolygonProjectionRunner {
 			Path executionFolderPath = Path.of(context.getExecutionFolder().toString(), polygon.toString());
 			Path executionFolder = Files.createDirectory(executionFolderPath);
 
+			// Each projection type folder only receives the input, output and per stand control files of its runs.
+			// The control and coefficient files of the execution folder template are read once per process, from
+			// the class path, by TemplateControlMaps.
 			for (ProjectionTypeCode projectionType : ProjectionTypeCode.ACTUAL_PROJECTION_TYPES_LIST) {
 
 				if (polygon.getLayerByProjectionType(projectionType) != null) {
-					ProjectionUtils.logger.debug("Populating execution folder for projectionType {}", projectionType);
+					logger.debug("Creating execution folder for projectionType {}", projectionType);
 
-					InputStream is = ProjectionUtils.class.getClassLoader()
-							.getResourceAsStream(EXECUTION_FOLDER_TEMPLATE_ZIP_FILE_NAME);
-
-					ProjectionUtils.prepareProjectionTypeFolder(is, executionFolder, projectionType.toString());
+					Files.createDirectory(executionFolder.resolve(projectionType.toString()));
 				}
 			}
 
