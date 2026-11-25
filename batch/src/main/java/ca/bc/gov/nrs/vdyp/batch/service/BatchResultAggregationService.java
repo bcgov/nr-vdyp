@@ -775,7 +775,7 @@ public class BatchResultAggregationService {
 	/**
 	 * Number of polygons that failed to project: the polygons with at least one Error alert, capped at the total so the
 	 * summary adds up. This matches the Polygons Processed tooltip in the UI. When the update has no alert counts, the
-	 * skipped polygon count is the only failure count available, so it is used instead.
+	 * skipped polygon count is the only failure count available, so it is used as the fallback.
 	 */
 	private static int failedToProjectCount(VDYPProjectionProgressUpdate progressUpdate, int total) {
 		AlertCounts alertCounts = progressUpdate.alertCounts();
