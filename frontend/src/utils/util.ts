@@ -1,7 +1,7 @@
 import type { NumStrNullType } from '@/types/types'
 import JSZip from 'jszip'
 import { CONSTANTS } from '@/constants'
-import { ALERT_COUNT } from '@/constants/message'
+import { ALERT_COUNT, POLYGONS_PROCESSED } from '@/constants/message'
 import { ExecutionOptionsEnum } from '@/services/vdyp-api'
 import type { BatchMappingModel } from '@/services/vdyp-api/models/projection-model'
 import type { AlertCounts } from '@/interfaces/interfaces'
@@ -661,6 +661,33 @@ export const buildAlertCountTooltipLines = (alertCounts: AlertCounts): string[] 
     line(ALERT_COUNT.ERRORS, alertCounts.errorMessageCount, alertCounts.errorPolygonCount),
     line(ALERT_COUNT.WARNINGS, alertCounts.warningMessageCount, alertCounts.warningPolygonCount),
     line(ALERT_COUNT.INFO_MESSAGES, alertCounts.infoMessageCount, alertCounts.infoPolygonCount),
+  ]
+}
+
+/**
+ * Builds the Polygons Processed tooltip lines (successfully projected and failed to project).
+ * Uses the same rule as the Processing summary line of ProgressLog.txt.
+ *
+ * @param completedPolygonCount - Number of polygons processed so far
+ * @param alertCounts - Alert breakdown that holds the number of polygons with errors
+ * @returns {string[]} The successfully projected line and the failed to project line
+ */
+export const buildPolygonsProcessedTooltipLines = (
+  completedPolygonCount: number | null,
+  alertCounts: AlertCounts,
+): string[] => {
+  const processed = Math.max(0, completedPolygonCount ?? 0)
+  const failedToProject = Math.min(processed, Math.max(0, alertCounts.errorPolygonCount))
+  const successfullyProjected = processed - failedToProject
+  return [
+    POLYGONS_PROCESSED.TOOLTIP_LINE(
+      POLYGONS_PROCESSED.SUCCESSFULLY_PROJECTED,
+      formatNumber(successfullyProjected),
+    ),
+    POLYGONS_PROCESSED.TOOLTIP_LINE(
+      POLYGONS_PROCESSED.FAILED_TO_PROJECT,
+      formatNumber(failedToProject),
+    ),
   ]
 }
 

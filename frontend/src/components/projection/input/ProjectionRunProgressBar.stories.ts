@@ -26,7 +26,7 @@ const meta: Meta<typeof ProjectionRunProgressBar> = {
     alertCounts: {
       control: 'object',
       description:
-        'Alert breakdown by type with polygon counts, shown in the Alert Count tile tooltip. No tooltip when null.',
+        'Alert breakdown by type with polygon counts, shown in the Alert Count tile tooltip. While Running or Ready, its error polygon count also gives the Polygons Processed tile tooltip (successfully projected and failed to project). No tooltips when null.',
     },
     startDate: {
       control: 'text',

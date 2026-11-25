@@ -358,6 +358,13 @@ export const ALERT_COUNT = Object.freeze({
     `${alertType}: ${messageCount} (${polygonCount} ${isSinglePolygon ? 'Polygon' : 'Polygons'})`,
 })
 
+export const POLYGONS_PROCESSED = Object.freeze({
+  TILE_LABEL: 'Polygons Processed',
+  SUCCESSFULLY_PROJECTED: 'Polygons Successfully Projected',
+  FAILED_TO_PROJECT: 'Polygons Failed to Project',
+  TOOLTIP_LINE: (label: string, polygonCount: string) => `${label} - ${polygonCount}`,
+})
+
 export const VALIDATION_WARN = Object.freeze({
   FORM_REF_NULL: 'Form reference is null. Validation skipped.',
 })

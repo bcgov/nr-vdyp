@@ -31,6 +31,7 @@ import {
   formatElapsedTime,
   getAlertCounts,
   buildAlertCountTooltipLines,
+  buildPolygonsProcessedTooltipLines,
 } from '@/utils/util'
 import JSZip from 'jszip'
 import { CONSTANTS } from '@/constants'
@@ -433,6 +434,45 @@ describe('Util Functions Unit Tests', () => {
         'Errors: 892 (200 Polygons)',
         'Warnings: 1,200 (600 Polygons)',
         'Info Messages: 2,000 (1,500 Polygons)',
+      ])
+    })
+  })
+
+  describe('buildPolygonsProcessedTooltipLines', () => {
+    const alertCounts = (errorPolygonCount: number) => ({
+      errorMessageCount: 892,
+      errorPolygonCount,
+      warningMessageCount: 1200,
+      warningPolygonCount: 600,
+      infoMessageCount: 2000,
+      infoPolygonCount: 1500,
+    })
+
+    it('should count polygons with errors as failed to project and the rest as successfully projected', () => {
+      expect(buildPolygonsProcessedTooltipLines(36210, alertCounts(30))).to.deep.equal([
+        'Polygons Successfully Projected - 36,180',
+        'Polygons Failed to Project - 30',
+      ])
+    })
+
+    it('should show all processed polygons as successfully projected when no polygon has errors', () => {
+      expect(buildPolygonsProcessedTooltipLines(500, alertCounts(0))).to.deep.equal([
+        'Polygons Successfully Projected - 500',
+        'Polygons Failed to Project - 0',
+      ])
+    })
+
+    it('should treat a null processed count as 0', () => {
+      expect(buildPolygonsProcessedTooltipLines(null, alertCounts(0))).to.deep.equal([
+        'Polygons Successfully Projected - 0',
+        'Polygons Failed to Project - 0',
+      ])
+    })
+
+    it('should cap failed to project at the processed count so the two lines add up', () => {
+      expect(buildPolygonsProcessedTooltipLines(10, alertCounts(12))).to.deep.equal([
+        'Polygons Successfully Projected - 0',
+        'Polygons Failed to Project - 10',
       ])
     })
   })

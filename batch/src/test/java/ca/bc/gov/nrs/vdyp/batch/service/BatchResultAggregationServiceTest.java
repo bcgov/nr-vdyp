@@ -163,9 +163,10 @@ class BatchResultAggregationServiceTest {
 
 		String progressLog = getZipEntryContent(resultZip, "ProgressLog.txt");
 		assertTrue(progressLog.contains("Processed 2,000 polygons..."));
+		// Failed to Project is the number of polygons with errors (200), as in the Polygons Processed tooltip
 		assertTrue(
 				progressLog.contains(
-						"Processing summary: 1,999 polygons Projected Successfully + 1 Failed to Project = 2,000 Processed"
+						"Processing summary: 1,800 polygons Projected Successfully + 200 Failed to Project = 2,000 Processed"
 				)
 		);
 		assertTrue(progressLog.contains("Generated 4,092 Alerts ..."));
@@ -174,6 +175,44 @@ class BatchResultAggregationServiceTest {
 						"Alerts summary: 892 Errors (200 Polygons) + 1,200 Warnings (1 Polygon) + 2,000 Info Messages (1,500 Polygons) = 4,092 Alerts"
 				)
 		);
+	}
+
+	@Test
+	void testAggregateResults_ProgressLogCapsFailedToProjectAtTotal()
+			throws BatchResultAggregationException, IOException {
+		setupPartitionDirectories();
+		VDYPProjectionProgressUpdate update = new VDYPProjectionProgressUpdate(
+				JOB_GUID, 10, 10, 30, 0, 0, new AlertCounts(20, 12, 5, 5, 5, 5)
+		);
+
+		Path resultZip = resultAggregationService.aggregateResultsFromJobDir(
+				JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP, update, duration, JOB_PARAMETERS
+		);
+
+		String progressLog = getZipEntryContent(resultZip, "ProgressLog.txt");
+		assertTrue(
+				progressLog.contains(
+						"Processing summary: 0 polygons Projected Successfully + 10 Failed to Project = 10 Processed"
+				)
+		);
+	}
+
+	@Test
+	void testAggregateResults_ProgressLogWithoutAlertCountsUsesSkippedCount()
+			throws BatchResultAggregationException, IOException {
+		setupPartitionDirectories();
+
+		Path resultZip = resultAggregationService.aggregateResultsFromJobDir(
+				JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP, progressUpdate, duration, JOB_PARAMETERS
+		);
+
+		String progressLog = getZipEntryContent(resultZip, "ProgressLog.txt");
+		assertTrue(
+				progressLog.contains(
+						"Processing summary: 99 polygons Projected Successfully + 1 Failed to Project = 100 Processed"
+				)
+		);
+		assertFalse(progressLog.contains("Alerts summary"));
 	}
 
 	@Test
