@@ -11,7 +11,7 @@
 011 vp_adj.dat                                        VDYP7 Polygon input
 012 vs_adj.dat                                        VDYP7 Layer by Species, input
 013 vu_adj.dat                                        VDYP7 Layer by SP0 by Util, input 
-                                                      NOTE: Grow-to years file is not used by backend
+014 vin_y1.dat                                        VDYP7 Years-to-Grow file, input
 
 015 vp_grow.dat                                       VDYP7 Polygon  out
 016 vs_grow.dat                                       VDYP7 Layer by SP0  out
@@ -60,7 +60,7 @@
 096 coe/VETVOL1.DAT                                   Vet-layer volume adjust    RD_YVET                         
 097 coe/VETDQ2.DAT                                    DQ for Vet layer           RD_YDQV
 
-101   -1   1   2   2   1   1                          Control variables (10I4)
+101   -1   1   2   3   1   1                          Control variables (10I4)
                                                         1st 4 col: IYR_CNTR =i   i=0 for NO GROWTH 
                                                               -1 to use SEQ014 (specifies end yr, each poly)
                                                             i =1 to 400  grow i yrs                               
@@ -103,7 +103,7 @@
 
 
 199  2 3 2 2 0 2 0 1 1 0 415 5 713 3 0 0 0 0 0 1 0 0 0Debug switches (25) 0=default See IPSJF155, App. IX
-                                                      (1) = 1 to DIASABLE species dynamics
+                                                      (1) = 1 to DISABLE species dynamics
                                                       (2) = n, maximum BH age in BA and DQ eqns = 100*n.
                                                       (3) = 0 Fiat BA growth model (approach to yield curves)
                                                           = 1 to invoke empirical BA growth model (see IPSJF176)

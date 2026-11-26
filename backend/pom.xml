@@ -455,6 +455,28 @@
           </execution>
         </executions>
       </plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>make-execution-folder-template</id>
+						<goals>
+							<goal>single</goal>
+						</goals>
+						<phase>generate-resources</phase>
+						<configuration>
+							<appendAssemblyId>false</appendAssemblyId>
+							<descriptors>
+								<descriptor>${basedir}/assembly-ExecutionFolderTemplate.xml</descriptor>
+							</descriptors>
+							<finalName>ExecutionFolderTemplate</finalName>
+							<outputDirectory>${project.build.directory}/classes</outputDirectory>
+							<attach>false</attach>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
     </plugins>
   </build>
   <profiles>
