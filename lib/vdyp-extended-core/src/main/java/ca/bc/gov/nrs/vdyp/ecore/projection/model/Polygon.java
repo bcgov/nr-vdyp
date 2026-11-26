@@ -199,19 +199,8 @@ public class Polygon implements Comparable<Polygon> {
 		percentStockableDead = null;
 		yieldFactor = 1.0;
 
-		otherVegetationTypes = Map.of(
-				OtherVegetationTypeCode.Bryoid, new OtherVegCoverDetails(0, OtherVegetationTypeCode.Bryoid), //
-				OtherVegetationTypeCode.Herb, new OtherVegCoverDetails(0, OtherVegetationTypeCode.Herb), //
-				OtherVegetationTypeCode.Shrub, new OtherVegCoverDetails(0, OtherVegetationTypeCode.Shrub)
-		);
-		nonVegetationTypes = Map.of(
-				NonVegetationTypeCode.BurnedArea, new NonVegCoverDetails("", 0, NonVegetationTypeCode.BurnedArea), //
-				NonVegetationTypeCode.ExposedSoil, new NonVegCoverDetails("", 0, NonVegetationTypeCode.ExposedSoil), //
-				NonVegetationTypeCode.Other, new NonVegCoverDetails("", 0, NonVegetationTypeCode.Other), //
-				NonVegetationTypeCode.Rock, new NonVegCoverDetails("", 0, NonVegetationTypeCode.Rock), //
-				NonVegetationTypeCode.Snow, new NonVegCoverDetails("", 0, NonVegetationTypeCode.Snow), //
-				NonVegetationTypeCode.Water, new NonVegCoverDetails("", 0, NonVegetationTypeCode.Water)
-		); //
+		otherVegetationTypes = defaultOtherVegetationTypes();
+		nonVegetationTypes = defaultNonVegetationTypes();
 
 		doAllowProjection = true;
 		wereLayerAdjustmentsSupplied = false;
@@ -342,6 +331,27 @@ public class Polygon implements Comparable<Polygon> {
 
 	public Double getYieldFactor() {
 		return yieldFactor;
+	}
+
+	/** @return a map with every other vegetation type (Bryoid, Herb, Shrub) set to 0% cover. */
+	private static Map<OtherVegetationTypeCode, OtherVegCoverDetails> defaultOtherVegetationTypes() {
+		return Map.of(
+				OtherVegetationTypeCode.Bryoid, new OtherVegCoverDetails(0, OtherVegetationTypeCode.Bryoid), //
+				OtherVegetationTypeCode.Herb, new OtherVegCoverDetails(0, OtherVegetationTypeCode.Herb), //
+				OtherVegetationTypeCode.Shrub, new OtherVegCoverDetails(0, OtherVegetationTypeCode.Shrub)
+		);
+	}
+
+	/** @return a map with every non-vegetation type (Burned Area, Exposed Soil, Rock, and so on) set to 0% cover. */
+	private static Map<NonVegetationTypeCode, NonVegCoverDetails> defaultNonVegetationTypes() {
+		return Map.of(
+				NonVegetationTypeCode.BurnedArea, new NonVegCoverDetails("", 0, NonVegetationTypeCode.BurnedArea), //
+				NonVegetationTypeCode.ExposedSoil, new NonVegCoverDetails("", 0, NonVegetationTypeCode.ExposedSoil), //
+				NonVegetationTypeCode.Other, new NonVegCoverDetails("", 0, NonVegetationTypeCode.Other), //
+				NonVegetationTypeCode.Rock, new NonVegCoverDetails("", 0, NonVegetationTypeCode.Rock), //
+				NonVegetationTypeCode.Snow, new NonVegCoverDetails("", 0, NonVegetationTypeCode.Snow), //
+				NonVegetationTypeCode.Water, new NonVegCoverDetails("", 0, NonVegetationTypeCode.Water)
+		);
 	}
 
 	public Map<OtherVegetationTypeCode, OtherVegCoverDetails> getOtherVegetationTypes() {
@@ -654,12 +664,20 @@ public class Polygon implements Comparable<Polygon> {
 		}
 
 		public Builder otherVegetationTypes(Map<OtherVegetationTypeCode, OtherVegCoverDetails> otherVegetationMap) {
-			polygon.otherVegetationTypes = otherVegetationMap;
+			var merged = new HashMap<>(defaultOtherVegetationTypes());
+			if (otherVegetationMap != null) {
+				merged.putAll(otherVegetationMap);
+			}
+			polygon.otherVegetationTypes = merged;
 			return this;
 		}
 
 		public Builder nonVegetationTypes(Map<NonVegetationTypeCode, NonVegCoverDetails> nonVegetationMap) {
-			polygon.nonVegetationTypes = nonVegetationMap;
+			var merged = new HashMap<>(defaultNonVegetationTypes());
+			if (nonVegetationMap != null) {
+				merged.putAll(nonVegetationMap);
+			}
+			polygon.nonVegetationTypes = merged;
 			return this;
 		}
 

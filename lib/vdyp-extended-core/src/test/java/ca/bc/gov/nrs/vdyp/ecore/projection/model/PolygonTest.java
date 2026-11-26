@@ -3,6 +3,7 @@ package ca.bc.gov.nrs.vdyp.ecore.projection.model;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.notPresent;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.aMapWithSize;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.closeTo;
 import static org.hamcrest.Matchers.hasProperty;
@@ -174,8 +175,9 @@ public class PolygonTest {
 						hasProperty("layers", is(layers)), //
 						hasProperty("history", is(history)), //
 						hasProperty("reportingInfo", is(polygonReportingInfo)), //
-						hasProperty("otherVegetationTypes", is(otherVegetationTypes)), //
-						hasProperty("nonVegetationTypes", is(nonVegetationTypes)), //
+						// Cover types that are not supplied are filled in with 0
+						hasProperty("otherVegetationTypes", aMapWithSize(OtherVegetationTypeCode.values().length)), //
+						hasProperty("nonVegetationTypes", aMapWithSize(NonVegetationTypeCode.values().length)), //
 						hasProperty("layerSummarizationMode", is(LayerSummarizationModeCode.TwoLayer)), //
 						hasProperty("doAllowProjection", is(true))
 				)
@@ -190,6 +192,36 @@ public class PolygonTest {
 		layersByProjectionType.put(ProjectionTypeCode.PRIMARY, layer);
 
 		assertThat(polygon.getLayerByProjectionType(ProjectionTypeCode.PRIMARY), is(layer));
+	}
+
+	/**
+	 * Cover types that are not supplied default to 0, as in VDYP7. Supplied types keep their values.
+	 */
+	@Test
+	void TestPolygonBuilderMergesSuppliedCoverOverDefaults() {
+		var shrub = new HcsvPolygonRecordBean.OtherVegCoverDetails(10, OtherVegetationTypeCode.Shrub);
+		var exposedSoil = new HcsvPolygonRecordBean.NonVegCoverDetails("3", 15, NonVegetationTypeCode.ExposedSoil);
+
+		var polygon = new Polygon.Builder() //
+				.featureId(1) //
+				.otherVegetationTypes(Map.of(OtherVegetationTypeCode.Shrub, shrub)) //
+				.nonVegetationTypes(Map.of(NonVegetationTypeCode.ExposedSoil, exposedSoil)) //
+				.build();
+
+		var otherVegetationTypes = polygon.getOtherVegetationTypes();
+		assertThat(otherVegetationTypes, aMapWithSize(OtherVegetationTypeCode.values().length));
+		assertThat(otherVegetationTypes.get(OtherVegetationTypeCode.Shrub), is(shrub));
+		assertThat(otherVegetationTypes.get(OtherVegetationTypeCode.Herb).otherVegCoverPercent(), is(0));
+		assertThat(otherVegetationTypes.get(OtherVegetationTypeCode.Bryoid).otherVegCoverPercent(), is(0));
+
+		var nonVegetationTypes = polygon.getNonVegetationTypes();
+		assertThat(nonVegetationTypes, aMapWithSize(NonVegetationTypeCode.values().length));
+		assertThat(nonVegetationTypes.get(NonVegetationTypeCode.ExposedSoil), is(exposedSoil));
+		for (var type : NonVegetationTypeCode.values()) {
+			if (type != NonVegetationTypeCode.ExposedSoil) {
+				assertThat(nonVegetationTypes.get(type).nonVegCoverPercent(), is(0));
+			}
+		}
 	}
 
 	@Nested

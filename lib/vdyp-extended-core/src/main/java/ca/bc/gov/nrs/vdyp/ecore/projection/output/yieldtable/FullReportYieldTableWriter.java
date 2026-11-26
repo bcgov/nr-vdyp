@@ -673,7 +673,12 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 		}
 		entries.add(entry);
 
-		entries.add("% Stockable Area Supplied " + layer.getPercentStockable());
+		// Same as Crown Closure above: show <None> rather than null when no value was supplied
+		Double suppliedPercentStockable = layer.getPercentStockable();
+		entries.add(
+				"% Stockable Area Supplied " + (suppliedPercentStockable == null || suppliedPercentStockable < 0
+						? "<None>" : suppliedPercentStockable)
+		);
 		entries.add("CFS Eco Zone............. " + lastPolygonForTrailer.getCfsEcoZone());
 
 		Species firstSpecies = layer.getSp64sByPercent() != null && !layer.getSp64sByPercent().isEmpty()

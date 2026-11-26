@@ -51,6 +51,12 @@ public enum ValidationMessageKind {
 	UNRECOGNIZED_UTILIZATION_CLASS_NAME(
 			"For species \"{1}\", the associated reporting utilization level is invalid: \"{0}\""
 	), //
+	VRI_LAYER_STOCKABILITY_NOT_POSITIVE(
+			"Polygon {0}: layer \"{1}\" stockability \"{2}\" must be greater than 0 for a VRI polygon; leave it blank to have a default computed"
+	), //
+	VRI_POLYGON_STOCKABILITY_NOT_POSITIVE(
+			"Polygon {0}: percent stockable \"{1}\" must be greater than 0 for a VRI polygon; leave it blank to have a default computed"
+	), //
 	;
 
 	public enum Category {

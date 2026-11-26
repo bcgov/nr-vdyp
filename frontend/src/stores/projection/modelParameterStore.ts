@@ -368,7 +368,11 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
   })
 
   // stand information
+  // null (blank) means the model computes a default.
   const percentStockableArea = ref<string | null>(null)
+  // True when the restored parameters show a saved Stand Information panel.
+  // Needed because a saved Percent Stockable Area can be blank.
+  const isStandInfoSaved = ref<boolean>(false)
   const basalArea = ref<string | null>(null)
   const treesPerHectare = ref<string | null>(null)
   // minDBHLimit is always 7.5 cm+ it is not related to utilization values for species
@@ -448,6 +452,7 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
 
     // Reset stand info
     percentStockableArea.value = null
+    isStandInfoSaved.value = false
     basalArea.value = null
     treesPerHectare.value = null
     minDBHLimit.value = CONSTANTS.MINIMUM_DBH_LIMITS.CM7_5
@@ -535,7 +540,7 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     const det = reportTitle.value !== null && reportTitle.value.trim() !== ''
     const spe = det && speciesGroups.value.length > 0
     const sit = spe && becZone.value !== null
-    const sta = sit && percentStockableArea.value !== null
+    const sta = sit && isStandInfoSaved.value
     const rep = sta && startingAge.value !== null
     const detOpen = !det
     const speOpen = det && !spe
@@ -760,7 +765,15 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
    * Restore stand info from model parameters
    */
   const restoreStandInfoFromParams = (params: ModelParameters) => {
-    percentStockableArea.value = toStringOrNull(params.stockable)
+    // Saved stockable values:
+    //   null - the panel was never confirmed
+    //   0    - confirmed with a blank Percent Stockable Area
+    //   > 0  - the value the user entered
+    isStandInfoSaved.value = params.stockable !== null && params.stockable !== undefined
+    percentStockableArea.value =
+      isStandInfoSaved.value && Number(params.stockable) > CONSTANTS.PERCENT_STOCKABLE_AREA_NOT_SUPPLIED
+        ? toStringOrNull(params.stockable)
+        : null
     crownClosure.value = toStringOrNull(params.cc)
     basalArea.value = toStringOrNull(params.BA)
     treesPerHectare.value = toStringOrNull(params.TPH)

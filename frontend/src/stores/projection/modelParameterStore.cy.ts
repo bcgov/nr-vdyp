@@ -537,10 +537,7 @@ describe('Model Parameter Store', () => {
     expect(store.panelState.reportDetails.confirmed).to.be.false
 
     store.resetStore()
-    store.speciesList[0] = { species: 'PL', percent: '100' }
-    store.updateSpeciesGroup()
-    store.becZone = 'CWH'
-    store.percentStockableArea = '55'
+    store.restoreFromModelParameters(makeModelParams())
     store.restoreFromProjectionParams(
       makeParsedParams({
         reportTitle: 'Title',
@@ -556,16 +553,44 @@ describe('Model Parameter Store', () => {
   })
 
   it('should keep runModelEnabled false in edit mode when reportSettings has not been saved', () => {
-    store.speciesList[0] = { species: 'PL', percent: '100' }
-    store.updateSpeciesGroup()
-    store.becZone = 'CWH'
-    store.percentStockableArea = '55'
+    store.restoreFromModelParameters(makeModelParams())
     store.restoreFromProjectionParams(makeParsedParams({ reportTitle: 'Title', ageStart: null }), false)
 
     expect(store.panelState.standInfo.confirmed).to.be.true
     expect(store.panelState.reportSettings).to.deep.equal({ confirmed: false, editable: true })
     expect(store.panelOpenStates.reportSettings).to.equal(CONSTANTS.PANEL.OPEN)
     expect(store.runModelEnabled).to.be.false
+  })
+
+  it('should restore a saved stockable of 0 as a blank Percent Stockable Area on a confirmed Stand panel', () => {
+    store.restoreFromModelParameters(
+      makeModelParams({ stockable: CONSTANTS.PERCENT_STOCKABLE_AREA_NOT_SUPPLIED }),
+    )
+    store.restoreFromProjectionParams(makeParsedParams({ reportTitle: 'Title', ageStart: null }), false)
+
+    expect(store.percentStockableArea).to.be.null
+    expect(store.panelState.standInfo.confirmed).to.be.true
+    expect(store.panelState.reportSettings).to.deep.equal({ confirmed: false, editable: true })
+  })
+
+  it('should leave the Stand panel unconfirmed when the saved stockable is null', () => {
+    store.restoreFromModelParameters(makeModelParams({ stockable: null }))
+    store.restoreFromProjectionParams(makeParsedParams({ reportTitle: 'Title', ageStart: null }), false)
+
+    expect(store.percentStockableArea).to.be.null
+    expect(store.panelState.siteInfo.confirmed).to.be.true
+    expect(store.panelState.standInfo).to.deep.equal({ confirmed: false, editable: true })
+    expect(store.panelOpenStates.standInfo).to.equal(CONSTANTS.PANEL.OPEN)
+  })
+
+  it('should not treat a Percent Stockable Area set without a saved Stand panel as confirmed', () => {
+    store.speciesList[0] = { species: 'PL', percent: '100' }
+    store.updateSpeciesGroup()
+    store.becZone = 'CWH'
+    store.percentStockableArea = '55'
+    store.restoreFromProjectionParams(makeParsedParams({ reportTitle: 'Title', ageStart: null }), false)
+
+    expect(store.panelState.standInfo.confirmed).to.be.false
   })
 
   it('should override minimumDBHLimit for matching species group via utils', () => {

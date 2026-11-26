@@ -185,6 +185,32 @@ describe('createCSVFiles', () => {
     }
   }
 
+  it('should submit blank stockability columns when Percent Stockable Area is blank', async () => {
+    const store = createMockModelParameterStore({ percentStockableArea: null })
+    const { blobPolygon, blobLayer } = createCSVFiles(store)
+
+    const [polygonHeaderLine, polygonDataLine] = (await blobPolygon.text()).split('\n')
+    const polygonValues = polygonDataLine.split(',')
+    expect(polygonValues[polygonHeaderLine.split(',').indexOf('PRE_DISTURBANCE_STOCKABILITY')]).to.equal('')
+
+    const [layerHeaderLine, layerDataLine] = (await blobLayer.text()).split('\n')
+    const layerValues = layerDataLine.split(',')
+    expect(layerValues[layerHeaderLine.split(',').indexOf('LAYER_STOCKABILITY')]).to.equal('')
+  })
+
+  it('should submit the entered Percent Stockable Area in the stockability columns', async () => {
+    const store = createMockModelParameterStore({ percentStockableArea: '40' })
+    const { blobPolygon, blobLayer } = createCSVFiles(store)
+
+    const [polygonHeaderLine, polygonDataLine] = (await blobPolygon.text()).split('\n')
+    const polygonValues = polygonDataLine.split(',')
+    expect(polygonValues[polygonHeaderLine.split(',').indexOf('PRE_DISTURBANCE_STOCKABILITY')]).to.equal('40')
+
+    const [layerHeaderLine, layerDataLine] = (await blobLayer.text()).split('\n')
+    const layerValues = layerDataLine.split(',')
+    expect(layerValues[layerHeaderLine.split(',').indexOf('LAYER_STOCKABILITY')]).to.equal('40')
+  })
+
   it('should submit blank BA and TPH for Volume based projections', async () => {
     const store = createMockModelParameterStore({
       derivedBy: CONSTANTS.DERIVED_BY.VOLUME,
@@ -505,6 +531,35 @@ describe('buildModelParameters', () => {
     expect(params.si2).to.equal('15.0')
     expect(params.compute3).to.be.null
   })
+
+  ;([null, ''] as const).forEach((blankValue) => {
+    it(`should save a blank (${JSON.stringify(blankValue)}) Percent Stockable Area as NOT_SUPPLIED when the Stand panel is confirmed`, () => {
+      const store = createMockModelParameterStore({ percentStockableArea: blankValue })
+      expect(buildModelParameters(store, true).stockable).to.equal(CONSTANTS.PERCENT_STOCKABLE_AREA_NOT_SUPPLIED)
+    })
+
+    it(`should save a blank (${JSON.stringify(blankValue)}) Percent Stockable Area as null when the Stand panel is not confirmed`, () => {
+      const store = createMockModelParameterStore({ percentStockableArea: blankValue })
+      expect(buildModelParameters(store, false).stockable).to.be.null
+    })
+  })
+
+  it('should default the Stand panel confirmation to the store panel state', () => {
+    const confirmedStore = createMockModelParameterStore({
+      percentStockableArea: null,
+      panelState: { [CONSTANTS.MANUAL_INPUT_PANEL.STAND_INFO]: { confirmed: true, editable: false } },
+    })
+    expect(buildModelParameters(confirmedStore).stockable).to.equal(CONSTANTS.PERCENT_STOCKABLE_AREA_NOT_SUPPLIED)
+
+    const unconfirmedStore = createMockModelParameterStore({ percentStockableArea: null })
+    expect(buildModelParameters(unconfirmedStore).stockable).to.be.null
+  })
+
+  it('should save an entered Percent Stockable Area regardless of the Stand panel confirmation', () => {
+    const store = createMockModelParameterStore({ percentStockableArea: '40' })
+    expect(buildModelParameters(store, true).stockable).to.equal('40')
+    expect(buildModelParameters(store, false).stockable).to.equal('40')
+  })
 })
 
 describe('createProjection', () => {
@@ -556,6 +611,21 @@ describe('saveProjectionOnPanelConfirm', () => {
     cy.wrap(saveProjectionOnPanelConfirm(createMockModelParameterStore(), CONSTANTS.MANUAL_INPUT_PANEL.SPECIES_INFO))
       .then(() => apiClient.updateProjectionParams)
       .should('be.calledOnce')
+  })
+
+  it('should save a blank Percent Stockable Area as NOT_SUPPLIED when confirming the Stand panel', () => {
+    cy.stub(apiClient, 'updateProjectionParams').resolves({ data: mockProjectionModel })
+    cy.stub(apiClient, 'getProjection').resolves({ data: mockProjectionModel })
+
+    const appStore = useAppStore()
+    appStore.setCurrentProjectionGUID('existing-guid')
+    appStore.setViewMode(PROJECTION_VIEW_MODE.EDIT)
+
+    const store = createMockModelParameterStore({ percentStockableArea: null })
+    cy.wrap(saveProjectionOnPanelConfirm(store, CONSTANTS.MANUAL_INPUT_PANEL.STAND_INFO)).then(() => {
+      const modelParameters = (apiClient.updateProjectionParams as any).getCall(0).args[2]
+      expect(modelParameters.stockable).to.equal(CONSTANTS.PERCENT_STOCKABLE_AREA_NOT_SUPPLIED)
+    })
   })
 
   it('should throw MISSING_GUID when in EDIT mode with no GUID set', () => {
@@ -622,6 +692,37 @@ describe('hasPanelUnsavedChanges', () => {
       },
     })
     cy.wrap(hasPanelUnsavedChanges(CONSTANTS.MANUAL_INPUT_PANEL.SPECIES_INFO, createMockModelParameterStore())).should('equal', true)
+  })
+
+  // A saved stockable of NOT_SUPPLIED (0) represents a blank Percent Stockable Area
+  it('should treat a saved NOT_SUPPLIED stockable as matching a blank Percent Stockable Area', () => {
+    const appStore = useAppStore()
+    appStore.setCurrentProjectionGUID('some-guid')
+    cy.stub(apiClient, 'getProjection').resolves({
+      data: {
+        ...mockProjectionModel,
+        modelParameters: JSON.stringify(
+          createSavedModelParams({ stockable: CONSTANTS.PERCENT_STOCKABLE_AREA_NOT_SUPPLIED }),
+        ),
+      },
+    })
+    const store = createMockModelParameterStore({ percentStockableArea: null })
+    cy.wrap(hasPanelUnsavedChanges(CONSTANTS.MANUAL_INPUT_PANEL.STAND_INFO, store)).should('equal', false)
+  })
+
+  it('should detect a change from a saved NOT_SUPPLIED stockable to an entered Percent Stockable Area', () => {
+    const appStore = useAppStore()
+    appStore.setCurrentProjectionGUID('some-guid')
+    cy.stub(apiClient, 'getProjection').resolves({
+      data: {
+        ...mockProjectionModel,
+        modelParameters: JSON.stringify(
+          createSavedModelParams({ stockable: CONSTANTS.PERCENT_STOCKABLE_AREA_NOT_SUPPLIED }),
+        ),
+      },
+    })
+    const store = createMockModelParameterStore({ percentStockableArea: '40' })
+    cy.wrap(hasPanelUnsavedChanges(CONSTANTS.MANUAL_INPUT_PANEL.STAND_INFO, store)).should('equal', true)
   })
 })
 
