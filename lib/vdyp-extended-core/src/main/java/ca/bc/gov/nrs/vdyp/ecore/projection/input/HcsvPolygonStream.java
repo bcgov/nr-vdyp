@@ -214,8 +214,6 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 					.layers(layers) //
 					.build();
 
-			validateVriPolygonStockability(polygon);
-
 			int layerOrderNumber = 0;
 			while (nextLayerRecord != null && nextLayerRecord.getFeatureId() == polygonFeatureId) {
 
@@ -276,26 +274,6 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 	}
 
 	/**
-	 * Reject a VRI polygon whose percent stockable is 0 or less. A blank value is valid and gets a computed default.
-	 * Not in VDYP7. Applies to all HCSV input (Manual Input, File Upload, batch).
-	 */
-	private static void validateVriPolygonStockability(Polygon polygon) throws PolygonValidationException {
-		if (isVriStockabilityNotPositive(polygon, polygon.getPercentStockable())) {
-			throw new PolygonValidationException(
-					new ValidationMessage(
-							ValidationMessageKind.VRI_POLYGON_STOCKABILITY_NOT_POSITIVE, polygon,
-							polygon.getPercentStockable()
-					)
-			);
-		}
-	}
-
-	private static boolean isVriStockabilityNotPositive(Polygon polygon, Double percentStockable) {
-		return polygon.getInventoryStandard() == InventoryStandard.VRI && percentStockable != null
-				&& percentStockable <= 0.0;
-	}
-
-	/**
 	 * <code>V7Ext_AddLayer</code>
 	 * <p>
 	 * Add the given Layer (containing stand information) to the given Polygon.
@@ -317,15 +295,6 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 			logger.error("A layer with Id '{}' has already been supplied.", layer.getLayerId());
 			throw new PolygonValidationException(
 					new ValidationMessage(ValidationMessageKind.DUPLICATE_LAYER_SUPPLIED, polygon, layer.getLayerId())
-			);
-		}
-
-		if (isVriStockabilityNotPositive(polygon, layer.getPercentStockable())) {
-			throw new PolygonValidationException(
-					new ValidationMessage(
-							ValidationMessageKind.VRI_LAYER_STOCKABILITY_NOT_POSITIVE, polygon, layer.getLayerId(),
-							layer.getPercentStockable()
-					)
 			);
 		}
 

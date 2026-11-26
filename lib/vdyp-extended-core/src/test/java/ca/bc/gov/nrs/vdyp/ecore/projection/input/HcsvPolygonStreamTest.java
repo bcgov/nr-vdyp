@@ -127,7 +127,8 @@ class HcsvPolygonStreamTest {
 	}
 
 	/**
-	 * Stockability rules: 0 is an error for VRI polygons and layers; blank is valid and gets a computed default.
+	 * Stockability rules: blank and 0 both mean "not supplied" and get a computed default. An error is raised only when
+	 * that default cannot be calculated.
 	 */
 	@Nested
 	class TestVriStockability {
@@ -145,39 +146,46 @@ class HcsvPolygonStreamTest {
 			return hcsvPolygonFileContents.replace(",MS,14,50.0,", ",MS,14," + stockability + ",");
 		}
 
-		@Test
-		void testVriPolygonStockabilityOfZeroIsRejected() {
-			var stream = streamOf(polygonWithStockability("0"), defaultLayerPrefix + VALID_LAYER);
-
-			var error = assertThrows(PolygonValidationException.class, stream::getNextPolygon);
-
-			assertThat(error.getValidationMessages().size(), is(1));
-			assertThat(
-					error.getMessage(),
-					allOf(
-							containsString("Polygon 13919428"), containsString("percent stockable \"0\""),
-							containsString("must be greater than 0 for a VRI polygon")
-					)
-			);
-			assertThat(stream.hasNextPolygon(), is(false));
-			assertThat(stream.drainRemainingValidationMessages().isEmpty(), is(true));
+		/** The fixture lists non-vegetation type NA with a blank percent; this removes it. */
+		String withoutBlankNonVegCover(String polygonContents) {
+			return polygonContents.replace(",60.0,NA,", ",60.0,,");
 		}
 
 		@Test
-		void testVriLayerStockabilityOfZeroIsRejected() {
+		void testVriPolygonStockabilityOfZeroIsEstimated() throws PolygonValidationException {
+			var stream = streamOf(
+					withoutBlankNonVegCover(polygonWithStockability("0")), defaultLayerPrefix + VALID_LAYER
+			);
+
+			Polygon polygon = stream.getNextPolygon();
+
+			assertThat(polygon.getInventoryStandard(), is(InventoryStandard.VRI));
+			assertThat(polygon.getPercentStockable() >= 1.0, is(true));
+		}
+
+		@Test
+		void testVriLayerStockabilityOfZeroIsAccepted() throws PolygonValidationException {
 			var stream = streamOf(
 					hcsvPolygonFileContents,
 					defaultLayerPrefix + "1,P,0,,,,,5,1.000050,150,PLI,100.00,,,,,,,,,,,60,9.00,,,,,,,,,,\n"
 			);
 
+			Polygon polygon = stream.getNextPolygon();
+
+			assertThat(polygon.getInventoryStandard(), is(InventoryStandard.VRI));
+		}
+
+		@Test
+		void testVriPolygonStockabilityDefaultNotCalculableIsRejected() {
+			var stream = streamOf(polygonWithStockability(""), defaultLayerPrefix + VALID_LAYER);
+
 			var error = assertThrows(PolygonValidationException.class, stream::getNextPolygon);
 
-			assertThat(error.getValidationMessages().size(), is(1));
 			assertThat(
 					error.getMessage(),
 					allOf(
-							containsString("Polygon 13919428"), containsString("layer \"1\" stockability \"0\""),
-							containsString("must be greater than 0 for a VRI polygon")
+							containsString("Polygon 13919428"), containsString("a default cannot be calculated"),
+							containsString("has no cover percent")
 					)
 			);
 		}

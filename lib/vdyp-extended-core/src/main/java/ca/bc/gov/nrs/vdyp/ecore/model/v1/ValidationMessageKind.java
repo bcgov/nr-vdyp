@@ -39,6 +39,9 @@ public enum ValidationMessageKind {
 	), //
 	PERCENTAGES_INCREASING("Polygon {0} Layer {1}: percent {2} at index {3} is larger than a preceding percentage"),
 	PRIMARY_LAYER_NOT_FOUND("Polygon {0}: no primary layer found for any projection type"), //
+	STOCKABILITY_DEFAULT_NOT_CALCULABLE(
+			"Polygon {0}: percent stockable was not supplied (blank or 0) and a default cannot be calculated because cover type \"{1}\" has no cover percent"
+	), //
 	UNEXPECTED_STREAMS_SUPPLIED("The following input file types were supplied, but not expected: {0}"),
 	UNRECOGNIZED_COMBINE_AGE_YEAR_RANGE_OPTION("{0} is not a recognized combine-year-age-range value"),
 	UNSUPPORTED_COMBINE_AGE_YEAR_RANGE_OPTION("only the INTERSECT combine-year-age-range option is supported"),
@@ -50,12 +53,6 @@ public enum ValidationMessageKind {
 	UNRECOGNIZED_SPECIES_GROUP_NAME("Species group name \"{0}\" is not a known species group"),
 	UNRECOGNIZED_UTILIZATION_CLASS_NAME(
 			"For species \"{1}\", the associated reporting utilization level is invalid: \"{0}\""
-	), //
-	VRI_LAYER_STOCKABILITY_NOT_POSITIVE(
-			"Polygon {0}: layer \"{1}\" stockability \"{2}\" must be greater than 0 for a VRI polygon; leave it blank to have a default computed"
-	), //
-	VRI_POLYGON_STOCKABILITY_NOT_POSITIVE(
-			"Polygon {0}: percent stockable \"{1}\" must be greater than 0 for a VRI polygon; leave it blank to have a default computed"
 	), //
 	;
 

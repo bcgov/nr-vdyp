@@ -1151,6 +1151,8 @@ public class Polygon implements Comparable<Polygon> {
 		double percentStockability;
 		if (inventoryStandard == InventoryStandard.VRI) {
 
+			validateCoverPercentsSupplied();
+
 			var percentCrownSpaces = percentStocked - crownClosure;
 
 			var estimatedPercentStockable = otherVegetationTypes.get(OtherVegetationTypeCode.Shrub)
@@ -1219,6 +1221,30 @@ public class Polygon implements Comparable<Polygon> {
 		percentStockable = percentStockability;
 
 		logger.debug("{}: percent stockable estimated at: {}", this, percentStockable);
+	}
+
+	/**
+	 * The VRI stockability estimate adds up the cover percents. A cover type supplied without a percent (for example a
+	 * non-vegetation type with a blank percent) makes that impossible, so report it as a validation error rather than
+	 * failing with a NullPointerException.
+	 */
+	private void validateCoverPercentsSupplied() throws PolygonValidationException {
+		for (var cover : otherVegetationTypes.values()) {
+			if (cover.otherVegCoverPercent() == null) {
+				throw stockabilityDefaultNotCalculable(cover.getNonVegCoverType());
+			}
+		}
+		for (var cover : nonVegetationTypes.values()) {
+			if (cover.nonVegCoverPercent() == null) {
+				throw stockabilityDefaultNotCalculable(cover.getNonVegCoverType());
+			}
+		}
+	}
+
+	private PolygonValidationException stockabilityDefaultNotCalculable(Object coverType) {
+		return new PolygonValidationException(
+				new ValidationMessage(ValidationMessageKind.STOCKABILITY_DEFAULT_NOT_CALCULABLE, this, coverType)
+		);
 	}
 
 	/**
