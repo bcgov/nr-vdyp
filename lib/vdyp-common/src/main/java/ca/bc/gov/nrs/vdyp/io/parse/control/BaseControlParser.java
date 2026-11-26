@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
+import ca.bc.gov.nrs.vdyp.controlmap.SharedControlMapValues;
 import ca.bc.gov.nrs.vdyp.io.FailoverFileResolver;
 import ca.bc.gov.nrs.vdyp.io.FileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.DebugSettingsParser;
@@ -135,7 +136,7 @@ public abstract class BaseControlParser<S extends DebugSettings> {
 	 *
 	 * @param resourceNames control files to read, in order; later files override earlier ones
 	 * @param fileResolver  resolver used to locate the control files and, relative to them, the files they name
-	 * @return an unmodifiable control map
+	 * @return an unmodifiable control map whose values are read only (see {@link SharedControlMapValues})
 	 */
 	public Map<String, Object> parseSharedByName(List<String> resourceNames, FileResolver fileResolver)
 			throws IOException, ResourceParseException {
@@ -144,6 +145,9 @@ public abstract class BaseControlParser<S extends DebugSettings> {
 		Map<String, FileResolver> resolverContext = readControlFiles(resourceNames, fileResolver, map);
 
 		applySharedModifiers(map, resolverContext);
+
+		// The map and its parsed definitions and coefficients will be shared by every run, so make them read only
+		SharedControlMapValues.makeReadOnly(map);
 
 		return Collections.unmodifiableMap(map);
 	}

@@ -36,6 +36,23 @@ public class BaseDebugSettings implements DebugSettings {
 
 	private final Object[] cache;
 
+	private boolean readOnly = false;
+
+	/**
+	 * Make these settings read only, so that {@link #setValue} throws {@link UnsupportedOperationException}. Used when
+	 * the settings are shared between runs. Settings can not be made modifiable again.
+	 */
+	public void makeReadOnly() {
+		readOnly = true;
+	}
+
+	/**
+	 * @return whether {@link #makeReadOnly} has been called
+	 */
+	public boolean isReadOnly() {
+		return readOnly;
+	}
+
 	private void validateSettingNumber(int settingNumber) {
 		if (settingNumber < 1 || settingNumber > MAX_DEBUG_SETTINGS) {
 			throw new IllegalArgumentException(
@@ -149,6 +166,12 @@ public class BaseDebugSettings implements DebugSettings {
 	 */
 	@Override
 	public void setValue(int settingNumber, int value) {
+		if (readOnly) {
+			throw new UnsupportedOperationException(
+					"These debug settings are shared between runs and are read only; debug setting " + settingNumber
+							+ " can not be changed"
+			);
+		}
 		logger.atWarn().addArgument(settingNumber).addArgument(getValue(settingNumber)).addArgument(value)
 				.setMessage("Changing debug setting {} from {} to {}.  This should only happen when debugging/testing.")
 				.log();

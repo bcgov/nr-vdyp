@@ -1,10 +1,13 @@
 package ca.bc.gov.nrs.vdyp.ecore.projection;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.sameInstance;
 
+import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -108,6 +111,12 @@ class TemplateControlMapsTest {
 							layers
 					)
 			);
+
+			// A run that writes to a read only shared value, or gets a read only value of the wrong type, fails the
+			// polygon and reports it in the error log rather than throwing, so check the log
+			var errors = new String(runner.getErrorStream().readAllBytes(), StandardCharsets.UTF_8);
+			assertThat(id, errors, not(containsString(UnsupportedOperationException.class.getName())));
+			assertThat(id, errors, not(containsString(ClassCastException.class.getName())));
 		}
 	}
 }

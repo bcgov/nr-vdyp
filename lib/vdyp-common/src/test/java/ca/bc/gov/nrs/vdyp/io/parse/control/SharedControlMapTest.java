@@ -3,6 +3,7 @@ package ca.bc.gov.nrs.vdyp.io.parse.control;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
@@ -25,8 +26,13 @@ import org.junit.jupiter.api.io.TempDir;
 
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.controlmap.ControlMapCache;
+import ca.bc.gov.nrs.vdyp.controlmap.SharedControlMapValues;
 import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
+import ca.bc.gov.nrs.vdyp.model.BaseDebugSettings;
 import ca.bc.gov.nrs.vdyp.model.BecLookup;
+import ca.bc.gov.nrs.vdyp.model.Coefficients;
+import ca.bc.gov.nrs.vdyp.model.MatrixMap;
+import ca.bc.gov.nrs.vdyp.model.MatrixMap3;
 import ca.bc.gov.nrs.vdyp.model.projection.ProcessingControlVariables;
 import ca.bc.gov.nrs.vdyp.test.DeepFingerprint;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
@@ -74,6 +80,21 @@ class SharedControlMapTest {
 		assertThat(shared.get(ControlKey.VDYP_OUTPUT_VDYP_POLYGON.name()), is("vp_grow2.dat"));
 
 		assertThrows(UnsupportedOperationException.class, () -> shared.put("X", "Y"));
+
+		// The parsed values are read only too
+		@SuppressWarnings("unchecked")
+		var utilCompBa = (MatrixMap<Coefficients>) shared.get(ControlKey.UTIL_COMP_BA.name());
+		assertThat(utilCompBa, instanceOf(MatrixMap3.class));
+		var firstKey = utilCompBa.getDimensions().stream().map(dimension -> dimension.iterator().next()).toArray();
+		var cell = utilCompBa.getM(firstKey);
+		assertThrows(UnsupportedOperationException.class, () -> utilCompBa.putM(null, firstKey));
+		assertThrows(UnsupportedOperationException.class, () -> cell.setCoe(cell.getIndexFrom(), 0f));
+
+		var vtrol = (ProcessingControlVariables) shared.get(ControlKey.VTROL.name());
+		assertThrows(UnsupportedOperationException.class, () -> vtrol.setControlVariable(1, 0));
+
+		var debug = (BaseDebugSettings) shared.get(ControlKey.DEBUG_SWITCHES.name());
+		assertThrows(UnsupportedOperationException.class, () -> debug.setValue(1, 0));
 	}
 
 	@Test
@@ -106,22 +127,31 @@ class SharedControlMapTest {
 				.parseByName(List.of(CONTROL_FILE), TestUtils.fileResolver(TestUtils.class), new HashMap<>());
 
 		var parser = new ForwardControlParser();
-		var run = parser
-				.parseForRun(parser.parseSharedByName(List.of(CONTROL_FILE), sharedResolver), List.of(), runResolver);
+		var shared = parser.parseSharedByName(List.of(CONTROL_FILE), sharedResolver);
+		var run = parser.parseForRun(shared, List.of(), runResolver);
 
 		assertThat(run.keySet(), equalTo(full.keySet()));
+		// Entries the run takes from the shared map are in their read only form, so compare them with the read only
+		// form of the full parse. This includes entries a modifier adds under other keys, such as WASTE_MODIFIERS.
+		var sharedKeys = run.keySet().stream().filter(key -> shared.containsKey(key))
+				.filter(key -> run.get(key) != null && run.get(key) == shared.get(key)).toList();
+		assertThat(sharedKeys, hasItems(ControlKey.BEC_DEF.name(), ControlKey.WASTE_MODIFIERS.name()));
+		Map<String, Object> fullReadOnly = new HashMap<>();
+		for (var key : sharedKeys) {
+			fullReadOnly.put(key, SharedControlMapValues.readOnlyValue(full.get(key)));
+		}
 		for (var entry : full.entrySet()) {
 			var runValue = run.get(entry.getKey());
-			if (entry.getValue() == null) {
+			var expected = sharedKeys.contains(entry.getKey()) ? fullReadOnly.get(entry.getKey()) : entry.getValue();
+			if (expected == null) {
 				assertThat(entry.getKey(), runValue, is((Object) null));
 			} else {
-				assertThat(entry.getKey(), runValue, instanceOf(entry.getValue().getClass()));
+				assertThat(entry.getKey(), runValue, instanceOf(expected.getClass()));
 			}
 		}
 		// Parsed content is the same
-		for (var modifier : parser.sharedModifiers()) {
-			var key = modifier.getControlKeyName();
-			assertThat(key, DeepFingerprint.of(run.get(key)), equalTo(DeepFingerprint.of(full.get(key))));
+		for (var key : sharedKeys) {
+			assertThat(key, DeepFingerprint.of(run.get(key)), equalTo(DeepFingerprint.of(fullReadOnly.get(key))));
 		}
 	}
 
