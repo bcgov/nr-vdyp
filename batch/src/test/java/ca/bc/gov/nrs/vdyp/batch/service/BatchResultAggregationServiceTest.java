@@ -151,6 +151,38 @@ class BatchResultAggregationServiceTest {
 	}
 
 	@Test
+	void testAggregateResults_IncludesParametersJson() throws Exception {
+		setupPartitionDirectories();
+
+		Path resultZip = aggregateResultsFromJobDir(tempDir.toString());
+
+		// The job's parameters JSON is written pretty-printed
+		Parameters expected = objectMapper
+				.readValue(JOB_PARAMETERS.getString("projectionParametersJson"), Parameters.class);
+		assertEquals(
+				objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(expected),
+				getZipEntryContent(resultZip, Parameters.JSON_FILE_NAME)
+		);
+	}
+
+	@Test
+	void testAggregateResults_NoProjectionParameters_OmitsParametersJson() throws Exception {
+		// Yield table only: merging an error log needs the projection parameters
+		Path partitionDir = Files.createDirectories(tempDir.resolve("output-partition0"));
+		Files.writeString(partitionDir.resolve("YieldTable.csv"), YIELD_TABLE_CONTENT);
+
+		Path resultZip = resultAggregationService.aggregateResultsFromJobDir(
+				JOB_EXECUTION_ID, JOB_GUID, tempDir.toString(), JOB_TIMESTAMP, progressUpdate, duration,
+				new JobParameters()
+		);
+
+		try (var zip = new java.util.zip.ZipFile(resultZip.toFile())) {
+			assertEquals(null, zip.getEntry(Parameters.JSON_FILE_NAME));
+			assertNotNull(zip.getEntry("YieldTable.csv"));
+		}
+	}
+
+	@Test
 	void testAggregateResults_ProgressLogIncludesAlertsSummary() throws BatchResultAggregationException, IOException {
 		setupPartitionDirectories();
 		VDYPProjectionProgressUpdate update = new VDYPProjectionProgressUpdate(
@@ -408,8 +440,7 @@ class BatchResultAggregationServiceTest {
 			}
 		}
 
-		assertEquals(1, entryNames.size());
-		assertEquals("README.txt", entryNames.get(0));
+		assertEquals(List.of(Parameters.JSON_FILE_NAME, "README.txt"), entryNames);
 	}
 
 	private void verifyMixedFileTypesZipContent(Path zipPath) throws IOException {

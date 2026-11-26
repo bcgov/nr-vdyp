@@ -278,9 +278,10 @@ public class ProjectionService {
 
 		logger.info("<runProjection {} {}", kind, projectionId);
 
+		String serializedParametersText = null;
 		try {
-			// Included to generate JSON text of parameters as needed
-			String serializedParametersText = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(params);
+			// Logged, and written to the results zip as parameters.json
+			serializedParametersText = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(params);
 			logger.info(serializedParametersText);
 		} catch (JsonProcessingException e) {
 			logger.warn(MessageFormat.format("{0}: unable to log parameters JSON", projectionId), e);
@@ -296,7 +297,7 @@ public class ProjectionService {
 			logger.info("Running {} projection {}", kind, projectionId);
 
 			runner.run(inputStreams);
-			response = buildOutputZipFile(runner);
+			response = buildOutputZipFile(runner, serializedParametersText);
 
 		} finally {
 			logger.info(">runProjection {} {}", kind, projectionId);
@@ -316,7 +317,7 @@ public class ProjectionService {
 		return sb.toString();
 	}
 
-	private Response buildOutputZipFile(ProjectionRunner runner) {
+	private Response buildOutputZipFile(ProjectionRunner runner, String serializedParametersText) {
 		logger.info("<buildOutputZipFile");
 
 		InputStream yieldTableStream = null;
@@ -365,6 +366,12 @@ public class ProjectionService {
 					} finally {
 						Utils.close(projectionResultsFile, zipEntryName);
 					}
+				}
+
+				if (serializedParametersText != null) {
+					writeZipEntry(
+							zipOut, Parameters.JSON_FILE_NAME, serializedParametersText.getBytes(StandardCharsets.UTF_8)
+					);
 				}
 			} catch (IOException e) {
 				return Response.status(500)

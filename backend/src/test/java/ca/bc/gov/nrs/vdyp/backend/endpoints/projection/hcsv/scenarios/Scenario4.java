@@ -104,7 +104,14 @@ class Scenario4 extends Scenario {
 
 		ZipEntry projectionResultsEntry;
 		var outputSeen = false;
+		var parametersSeen = false;
 		while ( (projectionResultsEntry = zipFile.getNextEntry()) != null) {
+			if (Parameters.JSON_FILE_NAME.equals(projectionResultsEntry.getName())) {
+				parametersSeen = true;
+				continue;
+			}
+			Assert.assertFalse(parametersSeen); // parameters.json must be the last entry
+
 			logger.info("Name: {}", projectionResultsEntry.getName());
 			String entryContent = new String(TestHelper.readZipEntry(zipFile, projectionResultsEntry));
 			if (entryContent.length() > 0) {
@@ -116,5 +123,6 @@ class Scenario4 extends Scenario {
 			outputSeen = true;
 		}
 		Assert.assertTrue(outputSeen);
+		Assert.assertTrue(parametersSeen);
 	}
 }

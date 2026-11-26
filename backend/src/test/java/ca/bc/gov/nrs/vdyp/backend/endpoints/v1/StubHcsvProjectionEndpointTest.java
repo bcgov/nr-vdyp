@@ -3,6 +3,7 @@ package ca.bc.gov.nrs.vdyp.backend.endpoints.v1;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -129,6 +130,8 @@ class StubHcsvProjectionEndpointTest {
 		String entry1Content = new String(TestHelper.readZipEntry(zipFile, entry1));
 		assertTrue(entry1Content.length() == 0);
 
+		ZipEntry params = zipFile.getNextEntry();
+		assertThat(params.getName(), is(Parameters.JSON_FILE_NAME));
 		assertTrue(zipFile.getNextEntry() == null);
 	}
 }
