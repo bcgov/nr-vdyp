@@ -162,11 +162,11 @@ public final class SharedControlMapValues {
 
 	private Map<Object, Object> readOnlyMap(Map<Object, Object> map) {
 		Map<Object, Object> changes = new LinkedHashMap<>();
-		for (var key : map.keySet()) {
-			var entry = map.get(key);
-			var readOnlyEntry = readOnly(entry);
-			if (readOnlyEntry != entry) {
-				changes.put(key, readOnlyEntry);
+		for (var entry : map.entrySet()) {
+			var value = entry.getValue();
+			var readOnlyValue = readOnly(value);
+			if (readOnlyValue != value) {
+				changes.put(entry.getKey(), readOnlyValue);
 			}
 		}
 		if (changes.isEmpty()) {

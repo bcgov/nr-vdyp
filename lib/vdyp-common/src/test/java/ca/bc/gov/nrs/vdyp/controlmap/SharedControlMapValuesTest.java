@@ -64,8 +64,9 @@ class SharedControlMapValuesTest {
 		var cell = readOnly.get("AC", Region.COASTAL);
 		assertThrows(UnsupportedOperationException.class, () -> cell.setCoe(1, 5f));
 		assertThrows(UnsupportedOperationException.class, () -> cell.scalarInPlace(x -> x * 2));
-		assertThrows(UnsupportedOperationException.class, () -> cell.reindex(0).setCoe(0, 5f));
-		assertThat(cell.reindex(0).getCoe(0), is(0.1f));
+		var reindexed = cell.reindex(0);
+		assertThrows(UnsupportedOperationException.class, () -> reindexed.setCoe(0, 5f));
+		assertThat(reindexed.getCoe(0), is(0.1f));
 
 		// Operations that make a new object still give a modifiable result
 		var doubled = cell.scalar(x -> x * 2);
@@ -88,7 +89,8 @@ class SharedControlMapValuesTest {
 		assertThat(cell, instanceOf(DoubleCoefficients.class));
 		assertThat(cell.getCoe(2), is(0.2));
 		assertThrows(UnsupportedOperationException.class, () -> cell.setCoe(1, 5.0));
-		assertThrows(UnsupportedOperationException.class, () -> cell.reindex(0).setCoe(0, 5.0));
+		var reindexed = cell.reindex(0);
+		assertThrows(UnsupportedOperationException.class, () -> reindexed.setCoe(0, 5.0));
 		assertThat(cell.scalar(x -> x * 2).getCoe(2), is(0.4));
 	}
 
@@ -126,14 +128,16 @@ class SharedControlMapValuesTest {
 		@SuppressWarnings("unchecked")
 		var readOnlyList = (List<Coefficients>) SharedControlMapValues.readOnlyValue(list);
 
+		var mapCoefficients = readOnlyMap.get(1).getCoefficients();
 		assertThat(readOnlyMap.get(1).getModel(), is(7));
-		assertThat(readOnlyMap.get(1).getCoefficients().getCoe(0), is(3f));
+		assertThat(mapCoefficients.getCoe(0), is(3f));
 		assertThrows(UnsupportedOperationException.class, () -> readOnlyMap.put(2, null));
-		assertThrows(UnsupportedOperationException.class, () -> readOnlyMap.get(1).getCoefficients().setCoe(0, 1f));
+		assertThrows(UnsupportedOperationException.class, () -> mapCoefficients.setCoe(0, 1f));
 
-		assertThat(readOnlyList.get(0).getCoe(0), is(4f));
+		var listCoefficients = readOnlyList.get(0);
+		assertThat(listCoefficients.getCoe(0), is(4f));
 		assertThrows(UnsupportedOperationException.class, () -> readOnlyList.add(null));
-		assertThrows(UnsupportedOperationException.class, () -> readOnlyList.get(0).setCoe(0, 1f));
+		assertThrows(UnsupportedOperationException.class, () -> listCoefficients.setCoe(0, 1f));
 	}
 
 	@Test
@@ -169,8 +173,9 @@ class SharedControlMapValuesTest {
 		var readOnlyView = (Map<String, Coefficients>) SharedControlMapValues.readOnlyValue(view);
 
 		assertThat(readOnlyView.keySet(), contains("AC", "B"));
-		assertThat(readOnlyView.get("B").getCoe(0), is(6f));
-		assertThrows(UnsupportedOperationException.class, () -> readOnlyView.get("B").setCoe(0, 1f));
+		var cell = readOnlyView.get("B");
+		assertThat(cell.getCoe(0), is(6f));
+		assertThrows(UnsupportedOperationException.class, () -> cell.setCoe(0, 1f));
 		assertThrows(UnsupportedOperationException.class, () -> readOnlyView.put("AC", null));
 	}
 
@@ -211,7 +216,8 @@ class SharedControlMapValuesTest {
 
 	@Test
 	void testUnknownTypeIsRejected() {
-		var ex = assertThrows(IllegalArgumentException.class, () -> readOnly("ODD", new StringBuilder("x")));
+		var value = new StringBuilder("x");
+		var ex = assertThrows(IllegalArgumentException.class, () -> readOnly("ODD", value));
 		assertThat(ex.getMessage(), containsString("ODD"));
 		assertThat(ex.getMessage(), containsString(StringBuilder.class.getName()));
 	}

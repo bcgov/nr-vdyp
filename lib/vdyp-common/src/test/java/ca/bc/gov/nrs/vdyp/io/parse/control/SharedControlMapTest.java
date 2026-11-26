@@ -87,8 +87,9 @@ class SharedControlMapTest {
 		assertThat(utilCompBa, instanceOf(MatrixMap3.class));
 		var firstKey = utilCompBa.getDimensions().stream().map(dimension -> dimension.iterator().next()).toArray();
 		var cell = utilCompBa.getM(firstKey);
+		var cellIndexFrom = cell.getIndexFrom();
 		assertThrows(UnsupportedOperationException.class, () -> utilCompBa.putM(null, firstKey));
-		assertThrows(UnsupportedOperationException.class, () -> cell.setCoe(cell.getIndexFrom(), 0f));
+		assertThrows(UnsupportedOperationException.class, () -> cell.setCoe(cellIndexFrom, 0f));
 
 		var vtrol = (ProcessingControlVariables) shared.get(ControlKey.VTROL.name());
 		assertThrows(UnsupportedOperationException.class, () -> vtrol.setControlVariable(1, 0));
@@ -133,7 +134,7 @@ class SharedControlMapTest {
 		assertThat(run.keySet(), equalTo(full.keySet()));
 		// Entries the run takes from the shared map are in their read only form, so compare them with the read only
 		// form of the full parse. This includes entries a modifier adds under other keys, such as WASTE_MODIFIERS.
-		var sharedKeys = run.keySet().stream().filter(key -> shared.containsKey(key))
+		var sharedKeys = run.keySet().stream().filter(shared::containsKey)
 				.filter(key -> run.get(key) != null && run.get(key) == shared.get(key)).toList();
 		assertThat(sharedKeys, hasItems(ControlKey.BEC_DEF.name(), ControlKey.WASTE_MODIFIERS.name()));
 		Map<String, Object> fullReadOnly = new HashMap<>();
@@ -179,10 +180,10 @@ class SharedControlMapTest {
 		var parser = new ForwardControlParser();
 		var shared = parser.parseSharedByName(List.of(CONTROL_FILE), sharedResolver);
 		writeStandControlFile("009 coe/Becdef.dat");
+		var runControlFiles = List.of(STAND_CONTROL_FILE);
 
 		var ex = assertThrows(
-				IllegalArgumentException.class,
-				() -> parser.parseForRun(shared, List.of(STAND_CONTROL_FILE), runResolver)
+				IllegalArgumentException.class, () -> parser.parseForRun(shared, runControlFiles, runResolver)
 		);
 		assertThat(ex.getMessage(), containsString(ControlKey.BEC_DEF.name()));
 	}

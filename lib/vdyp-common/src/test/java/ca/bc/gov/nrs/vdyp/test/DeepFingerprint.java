@@ -4,49 +4,43 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.Collection;
-import java.util.HexFormat;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.zip.CRC32C;
+import java.util.zip.Checksum;
 
 /**
- * Computes a digest of the state reachable from an object, for tests that check an object graph is not modified. VDYP
+ * Computes a checksum of the state reachable from an object, for tests that check an object graph is not modified. VDYP
  * model classes are walked field by field; maps, collections, arrays and optionals are walked by content; other JDK
  * value types contribute their string form. Classes outside the VDYP packages that are not handled above (loggers,
- * lambdas and so on) contribute only their class name.
- *
- * Used by SharedControlMapTest to ensure that after each type of application completes the map is not mutated
+ * lambdas and so on) contribute only their class name. Used by SharedControlMapTest and TemplateControlMapsTest to
+ * check that building a run's control map, and running each type of application, leaves the shared control maps
+ * unchanged.
  */
 public final class DeepFingerprint {
 
 	private static final String VDYP_PACKAGE = "ca.bc.gov.nrs.vdyp";
 
-	private final MessageDigest digest;
+	private final Checksum checksum = new CRC32C();
 	private final Map<Object, Integer> visited = new IdentityHashMap<>();
 
 	private DeepFingerprint() {
-		try {
-			digest = MessageDigest.getInstance("SHA-256");
-		} catch (NoSuchAlgorithmException e) {
-			throw new IllegalStateException(e);
-		}
 	}
 
 	/**
-	 * @return a hex digest of the state reachable from {@code root}
+	 * @return a hex checksum of the state reachable from {@code root}
 	 */
 	public static String of(Object root) {
 		var fingerprint = new DeepFingerprint();
 		fingerprint.walk(root);
-		return HexFormat.of().formatHex(fingerprint.digest.digest());
+		return Long.toHexString(fingerprint.checksum.getValue());
 	}
 
 	private void append(String s) {
-		digest.update(s.getBytes(StandardCharsets.UTF_8));
-		digest.update((byte) 0);
+		checksum.update(s.getBytes(StandardCharsets.UTF_8));
+		checksum.update(0);
 	}
 
 	private void walk(Object o) {

@@ -247,7 +247,11 @@ public abstract class ProcessingControlParser extends BaseControlParser<Processi
 	 * The configuration file parsers, in control file sequence order.
 	 */
 	@Override
-	protected List<ResourceControlMapModifier> sharedModifiers() {
+	protected List<ControlMapModifier> sharedModifiers() {
+		return Collections.unmodifiableList(orderedConfigurationParsers());
+	}
+
+	private List<ResourceControlMapModifier> orderedConfigurationParsers() {
 		return orderedControlKeys.stream().map(vdypProcessingConfigurationParsers::get).filter(Objects::nonNull)
 				.toList();
 	}
@@ -256,7 +260,7 @@ public abstract class ProcessingControlParser extends BaseControlParser<Processi
 	protected void applySharedModifiers(Map<String, Object> map, Map<String, FileResolver> fileResolver)
 			throws ResourceParseException, IOException {
 
-		for (ResourceControlMapModifier m : sharedModifiers()) {
+		for (ResourceControlMapModifier m : orderedConfigurationParsers()) {
 			logger.trace(
 					"Parsing configuration file {}[{}] using {}", m.getControlKeyName(),
 					m.getControlKey().sequence.get(), m.getClass().getSimpleName()

@@ -28,19 +28,18 @@ public class ReadOnlyMatrixMap<T> implements MatrixMap<T> {
 	 * @return a read only view of {@code source} with the same MatrixMapN interface, or {@code source} itself if it is
 	 *         already read only
 	 */
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public static <T> MatrixMap<T> of(MatrixMap<T> source) {
 		if (source instanceof ReadOnlyMatrixMap) {
 			return source;
 		}
-		if (source instanceof MatrixMap2) {
-			return new ReadOnlyMatrixMap2((MatrixMap2) source);
+		if (source instanceof MatrixMap2<?, ?, T> matrixMap2) {
+			return new ReadOnlyMatrixMap2<>(matrixMap2);
 		}
-		if (source instanceof MatrixMap3) {
-			return new ReadOnlyMatrixMap3((MatrixMap3) source);
+		if (source instanceof MatrixMap3<?, ?, ?, T> matrixMap3) {
+			return new ReadOnlyMatrixMap3<>(matrixMap3);
 		}
-		if (source instanceof MatrixMap4) {
-			return new ReadOnlyMatrixMap4((MatrixMap4) source);
+		if (source instanceof MatrixMap4<?, ?, ?, ?, T> matrixMap4) {
+			return new ReadOnlyMatrixMap4<>(matrixMap4);
 		}
 		return new ReadOnlyMatrixMap<>(source);
 	}

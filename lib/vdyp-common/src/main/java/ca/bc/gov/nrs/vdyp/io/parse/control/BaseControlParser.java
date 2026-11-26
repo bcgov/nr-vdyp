@@ -234,7 +234,7 @@ public abstract class BaseControlParser<S extends DebugSettings> {
 	 * The modifiers that read definition and coefficient files, in the order they must be applied. Their results do not
 	 * depend on the files of a particular run.
 	 */
-	protected abstract List<? extends ControlMapModifier> sharedModifiers();
+	protected abstract List<ControlMapModifier> sharedModifiers();
 
 	protected void applySharedModifiers(Map<String, Object> map, Map<String, FileResolver> fileResolverContext)
 			throws ResourceParseException, IOException {
