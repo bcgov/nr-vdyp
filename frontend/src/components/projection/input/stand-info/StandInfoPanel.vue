@@ -45,7 +45,7 @@
                   @update:modelValue="handlePercentStockableAreaUpdate"
                 />
                 <v-label
-                  v-show="isEmptyOrZero(percentStockableArea) && !percentStockableAreaError"
+                  v-show="isBlank(percentStockableArea) && !percentStockableAreaError"
                   style="font-size: var(--typography-font-size-label)"
                   >{{ MESSAGE.MDL_PRM_INPUT_HINT.SITE_DFT_COMPUTED }}</v-label
                 >
@@ -153,7 +153,7 @@ import {
 import { CONSTANTS, DEFAULTS, MESSAGE } from '@/constants'
 import { PROJECTION_ERR, VALIDATION_WARN } from '@/constants/message'
 import { standInfoValidation } from '@/validation'
-import { isBlank, isEmptyOrZero } from '@/utils/util'
+import { isBlank } from '@/utils/util'
 import { saveProjectionOnPanelConfirm, revertPanelToSaved, hasPanelUnsavedChanges } from '@/services/projection/modelParameterService'
 import { useNotificationStore } from '@/stores/common/notificationStore'
 import type { PanelName } from '@/types/types'
@@ -449,8 +449,9 @@ const onConfirm = async () => {
     console.warn(VALIDATION_WARN.FORM_REF_NULL)
   }
 
-  if (isEmptyOrZero(percentStockableArea.value)) {
-    percentStockableArea.value = '0'
+  // Keep a blank Percent Stockable Area as null so the model computes a default.
+  if (isBlank(percentStockableArea.value)) {
+    percentStockableArea.value = null
   }
 
   if (isBlank(crownClosure.value)) {

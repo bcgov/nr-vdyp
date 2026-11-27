@@ -61,6 +61,32 @@ describe('Stand Information Validation Unit Tests', () => {
       expect(result.errorType).to.equal('percentStockableArea')
     })
 
+    it('should return false for a percentStockableArea of 0', () => {
+      ;['0', '0.0', ' 0 '].forEach((value) => {
+        const result = validateRange(value, null, null, null)
+        expect(result.isValid, `value '${value}'`).to.be.false
+        expect(result.errorType).to.equal('percentStockableArea')
+      })
+    })
+
+    it('should return false for a non-numeric percentStockableArea', () => {
+      ;['abc', '5%', '1e', '-'].forEach((value) => {
+        const result = validateRange(value, null, null, null)
+        expect(result.isValid, `value '${value}'`).to.be.false
+        expect(result.errorType).to.equal('percentStockableArea')
+      })
+    })
+
+    it('should return true for a blank percentStockableArea', () => {
+      ;['', '   '].forEach((value) => {
+        assert.isTrue(validateRange(value, null, null, null).isValid, `value '${value}'`)
+      })
+    })
+
+    it('should return true for a percentStockableArea of 1', () => {
+      assert.isTrue(validateRange('1', null, null, null).isValid)
+    })
+
     it('should return false for basalArea above maximum', () => {
       const result = validateRange(
         null,

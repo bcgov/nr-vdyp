@@ -618,10 +618,15 @@ export const buildProjectionParameters = (
  * This creates a JSON structure that will be sent to the backend to persist
  * the user's selections for Manual Input mode.
  * @param modelParameterStore The store containing model parameters.
+ * @param isStandInfoConfirmed Whether the Stand Information panel is confirmed. Decides how a blank
+ *   Percent Stockable Area is saved (see buildStockableParameter). Defaults to the panel's current state.
  * @returns The model parameters object.
  */
 export const buildModelParameters = (
   modelParameterStore: any,
+  isStandInfoConfirmed: boolean = !!modelParameterStore.panelState?.[
+    CONSTANTS.MANUAL_INPUT_PANEL.STAND_INFO
+  ]?.confirmed,
 ): ModelParameters => {
   const species: ModelSpecies[] = modelParameterStore.speciesList
     .filter((item: SpeciesList) => item.species !== null && item.percent !== null)
@@ -667,13 +672,35 @@ export const buildModelParameters = (
     compute4: r3.compute, ageYears4: r3.ageYears, age4: r3.age, height4: r3.height, si4: r3.si,
     compute5: r4.compute, ageYears5: r4.ageYears, age5: r4.age, height5: r4.height, si5: r4.si,
     compute6: r5.compute, ageYears6: r5.ageYears, age6: r5.age, height6: r5.height, si6: r5.si,
-    stockable: modelParameterStore.percentStockableArea ? modelParameterStore.percentStockableArea : null,
+    stockable: buildStockableParameter(modelParameterStore.percentStockableArea, isStandInfoConfirmed),
     cc: modelParameterStore.crownClosure ? modelParameterStore.crownClosure : null,
     BA: modelParameterStore.basalArea ? modelParameterStore.basalArea : null,
     TPH: modelParameterStore.treesPerHectare ? modelParameterStore.treesPerHectare : null,
     minDBHLimit: modelParameterStore.minDBHLimit,
     currentDiameter: modelParameterStore.currentDiameter,
   }
+}
+
+/**
+ * Builds the saved stockable value from the Percent Stockable Area.
+ * A blank value is saved as PERCENT_STOCKABLE_AREA_NOT_SUPPLIED if the panel is confirmed and as null
+ * otherwise, so a restore can tell "confirmed blank" from "never confirmed".
+ */
+const buildStockableParameter = (
+  percentStockableArea: string | null,
+  isStandInfoConfirmed: boolean,
+): any => {
+  if (!isBlank(percentStockableArea)) return percentStockableArea
+  return isStandInfoConfirmed ? CONSTANTS.PERCENT_STOCKABLE_AREA_NOT_SUPPLIED : null
+}
+
+/**
+ * Converts a saved stockable value back to a Percent Stockable Area.
+ * Returns null (blank) for PERCENT_STOCKABLE_AREA_NOT_SUPPLIED or any value not greater than it.
+ */
+const toPercentStockableArea = (stockable: number | null | undefined): number | null => {
+  if (stockable === null || stockable === undefined) return null
+  return Number(stockable) > CONSTANTS.PERCENT_STOCKABLE_AREA_NOT_SUPPLIED ? stockable : null
 }
 
 /**
@@ -795,7 +822,11 @@ export const saveProjectionOnPanelConfirm = async (
     }
 
     const projectionParameters = buildProjectionParameters(modelParameterStore)
-    const modelParameters = buildModelParameters(modelParameterStore)
+    // The panel is marked confirmed only after this save, so count the panel being confirmed as confirmed.
+    const isStandInfoConfirmed =
+      panelName === CONSTANTS.MANUAL_INPUT_PANEL.STAND_INFO ||
+      !!modelParameterStore.panelState?.[CONSTANTS.MANUAL_INPUT_PANEL.STAND_INFO]?.confirmed
+    const modelParameters = buildModelParameters(modelParameterStore, isStandInfoConfirmed)
     const result = await updateProjectionParamsWithModel(projectionGUID, projectionParameters, modelParameters, modelParameterStore.reportDescription)
     appStore.setCurrentProjectionStatus(mapProjectionStatus(result.projectionStatusCode.code))
   }
@@ -849,7 +880,7 @@ const hasSiteInfoChanges = (store: any, saved: ModelParameters): boolean => {
 }
 
 const hasStandInfoChanges = (store: any, saved: ModelParameters): boolean => {
-  if (!numEq(store.percentStockableArea, saved.stockable)) return true
+  if (!numEq(store.percentStockableArea, toPercentStockableArea(saved.stockable))) return true
   if (!numEq(store.crownClosure, saved.cc)) return true
   if (!numEq(store.basalArea, saved.BA)) return true
   if (!numEq(store.treesPerHectare, saved.TPH)) return true

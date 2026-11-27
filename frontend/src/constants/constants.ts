@@ -75,6 +75,10 @@ export const SPECIAL_INDICATORS = Object.freeze({
   CALC: 'Calc.',
 })
 
+// Saved stockable value for a Percent Stockable Area left blank on a confirmed Stand Information panel.
+// Used only for saving and restoring; the model receives a blank value and computes a default.
+export const PERCENT_STOCKABLE_AREA_NOT_SUPPLIED = 0
+
 export const COMPUTED_VALUE = Object.freeze({
   HEIGHT: 'height',
   BHA_SITE_INDEX: 'si',
@@ -131,7 +135,7 @@ export const NUM_INPUT_LIMITS = Object.freeze({
   BHA50_SITE_INDEX_STEP: 1,
   BHA50_SITE_INDEX_DECIMAL_NUM: 2,
   PERCENT_STOCKABLE_AREA_MAX: 100,
-  PERCENT_STOCKABLE_AREA_MIN: 0,
+  PERCENT_STOCKABLE_AREA_MIN: 1, // must be greater than 0; whole numbers only
   PERCENT_STOCKABLE_AREA_STEP: 5,
   PERCENT_STOCKABLE_AREA_DECIMAL_NUM: 0,
   CROWN_CLOSURE_MAX: 100,

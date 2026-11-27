@@ -199,19 +199,8 @@ public class Polygon implements Comparable<Polygon> {
 		percentStockableDead = null;
 		yieldFactor = 1.0;
 
-		otherVegetationTypes = Map.of(
-				OtherVegetationTypeCode.Bryoid, new OtherVegCoverDetails(0, OtherVegetationTypeCode.Bryoid), //
-				OtherVegetationTypeCode.Herb, new OtherVegCoverDetails(0, OtherVegetationTypeCode.Herb), //
-				OtherVegetationTypeCode.Shrub, new OtherVegCoverDetails(0, OtherVegetationTypeCode.Shrub)
-		);
-		nonVegetationTypes = Map.of(
-				NonVegetationTypeCode.BurnedArea, new NonVegCoverDetails("", 0, NonVegetationTypeCode.BurnedArea), //
-				NonVegetationTypeCode.ExposedSoil, new NonVegCoverDetails("", 0, NonVegetationTypeCode.ExposedSoil), //
-				NonVegetationTypeCode.Other, new NonVegCoverDetails("", 0, NonVegetationTypeCode.Other), //
-				NonVegetationTypeCode.Rock, new NonVegCoverDetails("", 0, NonVegetationTypeCode.Rock), //
-				NonVegetationTypeCode.Snow, new NonVegCoverDetails("", 0, NonVegetationTypeCode.Snow), //
-				NonVegetationTypeCode.Water, new NonVegCoverDetails("", 0, NonVegetationTypeCode.Water)
-		); //
+		otherVegetationTypes = defaultOtherVegetationTypes();
+		nonVegetationTypes = defaultNonVegetationTypes();
 
 		doAllowProjection = true;
 		wereLayerAdjustmentsSupplied = false;
@@ -342,6 +331,27 @@ public class Polygon implements Comparable<Polygon> {
 
 	public Double getYieldFactor() {
 		return yieldFactor;
+	}
+
+	/** @return a map with every other vegetation type (Bryoid, Herb, Shrub) set to 0% cover. */
+	private static Map<OtherVegetationTypeCode, OtherVegCoverDetails> defaultOtherVegetationTypes() {
+		return Map.of(
+				OtherVegetationTypeCode.Bryoid, new OtherVegCoverDetails(0, OtherVegetationTypeCode.Bryoid), //
+				OtherVegetationTypeCode.Herb, new OtherVegCoverDetails(0, OtherVegetationTypeCode.Herb), //
+				OtherVegetationTypeCode.Shrub, new OtherVegCoverDetails(0, OtherVegetationTypeCode.Shrub)
+		);
+	}
+
+	/** @return a map with every non-vegetation type (Burned Area, Exposed Soil, Rock, and so on) set to 0% cover. */
+	private static Map<NonVegetationTypeCode, NonVegCoverDetails> defaultNonVegetationTypes() {
+		return Map.of(
+				NonVegetationTypeCode.BurnedArea, new NonVegCoverDetails("", 0, NonVegetationTypeCode.BurnedArea), //
+				NonVegetationTypeCode.ExposedSoil, new NonVegCoverDetails("", 0, NonVegetationTypeCode.ExposedSoil), //
+				NonVegetationTypeCode.Other, new NonVegCoverDetails("", 0, NonVegetationTypeCode.Other), //
+				NonVegetationTypeCode.Rock, new NonVegCoverDetails("", 0, NonVegetationTypeCode.Rock), //
+				NonVegetationTypeCode.Snow, new NonVegCoverDetails("", 0, NonVegetationTypeCode.Snow), //
+				NonVegetationTypeCode.Water, new NonVegCoverDetails("", 0, NonVegetationTypeCode.Water)
+		);
 	}
 
 	public Map<OtherVegetationTypeCode, OtherVegCoverDetails> getOtherVegetationTypes() {
@@ -654,12 +664,20 @@ public class Polygon implements Comparable<Polygon> {
 		}
 
 		public Builder otherVegetationTypes(Map<OtherVegetationTypeCode, OtherVegCoverDetails> otherVegetationMap) {
-			polygon.otherVegetationTypes = otherVegetationMap;
+			var merged = new HashMap<>(defaultOtherVegetationTypes());
+			if (otherVegetationMap != null) {
+				merged.putAll(otherVegetationMap);
+			}
+			polygon.otherVegetationTypes = merged;
 			return this;
 		}
 
 		public Builder nonVegetationTypes(Map<NonVegetationTypeCode, NonVegCoverDetails> nonVegetationMap) {
-			polygon.nonVegetationTypes = nonVegetationMap;
+			var merged = new HashMap<>(defaultNonVegetationTypes());
+			if (nonVegetationMap != null) {
+				merged.putAll(nonVegetationMap);
+			}
+			polygon.nonVegetationTypes = merged;
 			return this;
 		}
 
@@ -1133,6 +1151,8 @@ public class Polygon implements Comparable<Polygon> {
 		double percentStockability;
 		if (inventoryStandard == InventoryStandard.VRI) {
 
+			validateCoverPercentsSupplied();
+
 			var percentCrownSpaces = percentStocked - crownClosure;
 
 			var estimatedPercentStockable = otherVegetationTypes.get(OtherVegetationTypeCode.Shrub)
@@ -1201,6 +1221,30 @@ public class Polygon implements Comparable<Polygon> {
 		percentStockable = percentStockability;
 
 		logger.debug("{}: percent stockable estimated at: {}", this, percentStockable);
+	}
+
+	/**
+	 * The VRI stockability estimate adds up the cover percents. A cover type supplied without a percent (for example a
+	 * non-vegetation type with a blank percent) makes that impossible, so report it as a validation error rather than
+	 * failing with a NullPointerException.
+	 */
+	private void validateCoverPercentsSupplied() throws PolygonValidationException {
+		for (var cover : otherVegetationTypes.values()) {
+			if (cover.otherVegCoverPercent() == null) {
+				throw stockabilityDefaultNotCalculable(cover.getNonVegCoverType());
+			}
+		}
+		for (var cover : nonVegetationTypes.values()) {
+			if (cover.nonVegCoverPercent() == null) {
+				throw stockabilityDefaultNotCalculable(cover.getNonVegCoverType());
+			}
+		}
+	}
+
+	private PolygonValidationException stockabilityDefaultNotCalculable(Object coverType) {
+		return new PolygonValidationException(
+				new ValidationMessage(ValidationMessageKind.STOCKABILITY_DEFAULT_NOT_CALCULABLE, this, coverType)
+		);
 	}
 
 	/**

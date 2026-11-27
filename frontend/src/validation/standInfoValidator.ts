@@ -1,13 +1,21 @@
 import { ValidationBase } from './validationBase'
 import { CONSTANTS, BIZCONSTANTS } from '@/constants'
-import { convertToNumberSafely, extractLeadingNumber } from '@/utils/util'
+import {
+  convertToNumberSafely,
+  extractLeadingNumber,
+  isBlank,
+} from '@/utils/util'
 
 export class StandInfoValidator extends ValidationBase {
+  /**
+   * Validates the Percent Stockable Area.
+   * Blank is valid (the model computes a default). Otherwise it must be a number greater than 0 and up to 100.
+   */
   validatePercentStockableAreaRange(psa: string | null): boolean {
-    if (!psa) return true
+    if (isBlank(psa)) return true
 
     const numericPsa = convertToNumberSafely(psa)
-    if (!numericPsa) return true
+    if (numericPsa === null) return false
 
     return this.validateRange(
       numericPsa,

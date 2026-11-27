@@ -7,6 +7,12 @@ describe('AdminCancelProjectionDialog.vue', () => {
     projectionTitle: 'My Test Projection',
   }
 
+  // At the default 1024x768 viewport the action buttons render below the visible area and the open dialog blocks
+  // scrolling, so Cypress cannot click them.
+  beforeEach(() => {
+    cy.viewport(1280, 1000)
+  })
+
   it('renders the modal title with the projection name', () => {
     cy.mountWithVuetify(AdminCancelProjectionDialog, { props: defaultProps })
 

@@ -124,7 +124,63 @@ describe('<StandInfoPanel />', () => {
     cy.get('[data-testid="percent-stockable-area"]')
       .parent()
       .contains(MESSAGE.MDL_PRM_INPUT_HINT.SITE_DFT_COMPUTED)
-      .should('exist')
+      .should('be.visible')
+  })
+
+  describe('Percent Stockable Area validation', () => {
+    const setupStockable =
+      (value: string | null) =>
+      (ms: ReturnType<typeof useModelParameterStore>, as: ReturnType<typeof useAppStore>) => {
+        openPanel(ms)
+        makeEditable(ms)
+        as.viewMode = PROJECTION_VIEW_MODE.CREATE
+        ms.derivedBy = CONSTANTS.DERIVED_BY.VOLUME
+        ms.siteSpeciesValues = CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
+        ms.percentStockableArea = value
+      }
+
+    it('hides the default-computed hint when Percent Stockable Area is 0', () => {
+      mountPanel(setupStockable('0'))
+      cy.get('[data-testid="percent-stockable-area"]')
+        .parent()
+        .contains(MESSAGE.MDL_PRM_INPUT_HINT.SITE_DFT_COMPUTED)
+        .should('not.be.visible')
+    })
+
+    it('shows a validation error and does not confirm the panel when Percent Stockable Area is 0', () => {
+      const { modelStore } = mountPanel(setupStockable('0'))
+      cy.contains('button', 'Next').click()
+      cy.get('[data-testid="percent-stockable-area"]').should(
+        'contain.text',
+        MESSAGE.MDL_PRM_INPUT_ERR.DENSITY_VLD_PCT_STCB_AREA_RNG,
+      )
+      cy.then(() => {
+        expect(modelStore.panelState.standInfo.confirmed).to.be.false
+        expect(modelStore.percentStockableArea).to.equal('0')
+      })
+    })
+
+    it('confirms the panel and keeps a blank Percent Stockable Area blank', () => {
+      const { modelStore } = mountPanel(setupStockable(null))
+      cy.contains('button', 'Next').click()
+      cy.wrap(modelStore).its('panelState.standInfo.confirmed').should('be.true')
+      cy.then(() => {
+        expect(modelStore.percentStockableArea).to.be.null
+      })
+      cy.get('[data-testid="percent-stockable-area"]').should(
+        'not.contain.text',
+        MESSAGE.MDL_PRM_INPUT_ERR.DENSITY_VLD_PCT_STCB_AREA_RNG,
+      )
+    })
+
+    it('confirms the panel when Percent Stockable Area is greater than 0', () => {
+      const { modelStore } = mountPanel(setupStockable('1'))
+      cy.contains('button', 'Next').click()
+      cy.wrap(modelStore).its('panelState.standInfo.confirmed').should('be.true')
+      cy.then(() => {
+        expect(modelStore.percentStockableArea).to.equal('1')
+      })
+    })
   })
 
   describe('Crown Closure for Volume projection', () => {

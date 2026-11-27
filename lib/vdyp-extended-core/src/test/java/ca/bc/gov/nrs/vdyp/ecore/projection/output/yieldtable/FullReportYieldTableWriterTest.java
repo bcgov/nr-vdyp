@@ -125,6 +125,18 @@ class FullReportYieldTableWriterTest {
 		assertThat(output, not(containsString("computed using Default CC")));
 	}
 
+	@ParameterizedTest
+	@CsvSource(value = { "NULL, <None>", "-1.0, <None>", "85.0, 85.0" }, nullValues = "NULL")
+	void testSuppliedPercentStockableMetadata(Double supplied, String text) throws Exception {
+		var polygon = new Polygon.Builder().featureId(1).inventoryStandard(InventoryStandard.VRI)
+				.percentStockable(100.0).build();
+		var layer = new Layer.Builder().layerId("1").polygon(polygon).percentStockable(supplied).build();
+		polygon.setPrimaryLayer(layer);
+		var output = writeTrailer(reportContext(), polygon);
+		assertThat(output, containsString("% Stockable Area Supplied " + text));
+		assertThat(output, not(containsString("null")));
+	}
+
 	@Test
 	void testBasalAreaAndTreesPerHectareNotUsedWhenNotSupplied() throws Exception {
 		var polygon = new Polygon.Builder().featureId(1).inventoryStandard(InventoryStandard.FIP)
