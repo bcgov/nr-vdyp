@@ -15,6 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -49,7 +50,9 @@ import ca.bc.gov.nrs.vdyp.ecore.projection.model.PolygonMessage;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.PolygonReportingInfo;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ProjectionTypeCode;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ReturnCode;
+import ca.bc.gov.nrs.vdyp.io.FileResolver;
 import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
+import ca.bc.gov.nrs.vdyp.io.parse.control.BaseControlParser;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
 class RealComponentRunnerTest {
@@ -413,13 +416,19 @@ class RealComponentRunnerTest {
 
 		private final Map<String, Object> controlMap = new HashMap<>();
 
-		private final List<String> factoryCalls = new ArrayList<>();
+		private final List<String> controlMapCalls = new ArrayList<>();
 
 		private RealComponentRunner runner() {
-			return new RealComponentRunner((parser, templateControlFile, runControlFiles, runResolver) -> {
-				factoryCalls.add(templateControlFile + " " + runControlFiles + " " + runResolver.toPath(""));
-				return controlMap;
-			});
+			return new RealComponentRunner() {
+				@Override
+				Map<String, Object> createControlMap(
+						BaseControlParser<?> parser, String templateControlFile, List<String> runControlFiles,
+						FileResolver runResolver
+				) throws IOException {
+					controlMapCalls.add(templateControlFile + " " + runControlFiles + " " + runResolver.toPath(""));
+					return controlMap;
+				}
+			};
 		}
 
 		@Test
@@ -464,16 +473,22 @@ class RealComponentRunnerTest {
 
 			// The control map is built from the template control file, resolving run files in the projection type
 			// folder
-			assertThat(factoryCalls, contains("Test.CTR [] " + Path.of("TestPath", "PRIMARY").toAbsolutePath()));
+			assertThat(controlMapCalls, contains("Test.CTR [] " + Path.of("TestPath", "PRIMARY").toAbsolutePath()));
 		}
 
 		@Test
 		void testControlMapFailureIsInitializationFailure() throws Exception {
 			var em = EasyMock.createControl();
-			var rootCause = new java.io.IOException("Test Exception");
-			var runner = new RealComponentRunner((parser, templateControlFile, runControlFiles, runResolver) -> {
-				throw rootCause;
-			});
+			var rootCause = new IOException("Test Exception");
+			var runner = new RealComponentRunner() {
+				@Override
+				Map<String, Object> createControlMap(
+						BaseControlParser<?> parser, String templateControlFile, List<String> runControlFiles,
+						FileResolver runResolver
+				) throws IOException {
+					throw rootCause;
+				}
+			};
 
 			Polygon polygon = em.createMock(Polygon.class);
 			ProjectionTypeCode projectionTypeCode = ProjectionTypeCode.PRIMARY;

@@ -102,31 +102,20 @@ public class RealComponentRunner implements ComponentRunner {
 	}
 
 	/**
-	 * Builds the control map for one run of an application.
+	 * Builds the control map for one run of an application, from the shared template control maps (see
+	 * {@link TemplateControlMaps#forRun}). Tests override this to avoid parsing real control files.
+	 *
+	 * @param parser              a new control file parser for the application
+	 * @param templateControlFile the application's control file in the execution folder template
+	 * @param runControlFiles     control files for this run only, in the run's folder
+	 * @param runResolver         resolver for the run's folder
+	 * @return the control map for the run
 	 */
-	@FunctionalInterface
-	interface RunControlMapFactory {
-		/**
-		 * @param parser              a new control file parser for the application
-		 * @param templateControlFile the application's control file in the execution folder template
-		 * @param runControlFiles     control files for this run only, in the run's folder
-		 * @param runResolver         resolver for the run's folder
-		 * @return the control map for the run
-		 */
-		Map<String, Object> create(
-				BaseControlParser<?> parser, String templateControlFile, List<String> runControlFiles,
-				FileResolver runResolver
-		) throws IOException, ResourceParseException;
-	}
-
-	private final RunControlMapFactory controlMapFactory;
-
-	public RealComponentRunner() {
-		this(TemplateControlMaps::forRun);
-	}
-
-	RealComponentRunner(RunControlMapFactory controlMapFactory) {
-		this.controlMapFactory = controlMapFactory;
+	Map<String, Object> createControlMap(
+			BaseControlParser<?> parser, String templateControlFile, List<String> runControlFiles,
+			FileResolver runResolver
+	) throws IOException, ResourceParseException {
+		return TemplateControlMaps.forRun(parser, templateControlFile, runControlFiles, runResolver);
 	}
 
 	/**
@@ -166,8 +155,9 @@ public class RealComponentRunner implements ComponentRunner {
 			);
 			Map<String, Object> controlMap;
 			try {
-				controlMap = controlMapFactory
-						.create(app.createControlFileParser(), templateControlFile, runControlFiles, runResolver);
+				controlMap = createControlMap(
+						app.createControlFileParser(), templateControlFile, runControlFiles, runResolver
+				);
 			} catch (IOException | ResourceParseException e) {
 				throw new VdypApplicationInitializationException(e);
 			}
@@ -449,7 +439,7 @@ public class RealComponentRunner implements ComponentRunner {
 
 			if (state.didRunProjectionStage(ProjectionStageCode.Forward, projectionType)) {
 
-				Map<String, Object> forwardControlMap = controlMapFactory.create(
+				Map<String, Object> forwardControlMap = createControlMap(
 						new ForwardControlParser(), Vdyp7Constants.FORWARD_CONTROL_FILE_NAME, List.of(),
 						vdypControlFileResolver
 				);
@@ -463,7 +453,7 @@ public class RealComponentRunner implements ComponentRunner {
 			if (state.didRunProjectionStage(ProjectionStageCode.Back, projectionType)
 					&& state.getProcessingResults(ProjectionStageCode.Back, projectionType).isEmpty()) {
 
-				Map<String, Object> backwardsControlMap = controlMapFactory.create(
+				Map<String, Object> backwardsControlMap = createControlMap(
 						new BackControlParser(), Vdyp7Constants.BACK_CONTROL_FILE_NAME, List.of(),
 						vdypControlFileResolver
 				);
