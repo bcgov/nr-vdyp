@@ -14,6 +14,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
+import ca.bc.gov.nrs.vdyp.common.FixedWidthFormat;
 import ca.bc.gov.nrs.vdyp.common.FloatUnaryOperator;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
@@ -72,6 +73,15 @@ public class VdypOutputWriter implements Closeable {
 			+ SPEC_IDENTIFIER_FORMAT + "%3d%9.5f%9.2f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%6.1f\n";
 
 	static final String END_RECORD_FORMAT = POLY_IDENTIFIER_FORMAT + "  \n";
+
+	// The formats are parsed once; String.format parses them again for every record written.
+	private static final FixedWidthFormat POLY_RECORD = FixedWidthFormat.compile(POLY_FORMAT);
+	private static final FixedWidthFormat SPEC_RECORD = FixedWidthFormat.compile(SPEC_FORMAT);
+	private static final FixedWidthFormat UTIL_RECORD = FixedWidthFormat.compile(UTIL_FORMAT);
+	private static final FixedWidthFormat END_RECORD = FixedWidthFormat.compile(END_RECORD_FORMAT);
+
+	/** Reused for each record; a writer is used by one thread at a time. */
+	private final StringBuilder recordBuffer = new StringBuilder(256);
 
 	/**
 	 * Create a writer for Vdyp output files using the provided OutputStreams and an empty Optional for the
@@ -293,7 +303,7 @@ public class VdypOutputWriter implements Closeable {
 
 		writeFormat(
 				polygonFile, //
-				POLY_FORMAT, //
+				POLY_RECORD, //
 
 				polyIdOverride, //
 				polygon.getBiogeoclimaticZone().getAlias(), //
@@ -324,7 +334,7 @@ public class VdypOutputWriter implements Closeable {
 		// 082E004 615 1988 P 9 L LW 100.0 0.0 0.0 0.0 -9.00 -9.00 -9.0 -9.0 -9.0 0 -9
 		writeFormat(
 				speciesFile, //
-				SPEC_FORMAT, //
+				SPEC_RECORD, //
 
 				polyIdOverride, //
 				spec.getLayerType().getAlias(), //
@@ -428,7 +438,7 @@ public class VdypOutputWriter implements Closeable {
 
 			writeFormat(
 					utilizationFile, //
-					UTIL_FORMAT, //
+					UTIL_RECORD, //
 
 					polyIdOverride, //
 					layer.getLayerType().getAlias(), //
@@ -458,7 +468,7 @@ public class VdypOutputWriter implements Closeable {
 
 	private void writeEndRecord(OutputStream os, VdypPolygon polygon, PolygonIdentifier polyIdOverride)
 			throws IOException {
-		writeFormat(os, END_RECORD_FORMAT, polyIdOverride);
+		writeFormat(os, END_RECORD, polyIdOverride);
 	}
 
 	private void writeUtilizationEndRecord(VdypPolygon polygon, PolygonIdentifier polyIdOverride) throws IOException {
@@ -469,8 +479,10 @@ public class VdypOutputWriter implements Closeable {
 		writeEndRecord(speciesFile, polygon, polyIdOverride);
 	}
 
-	void writeFormat(OutputStream os, String format, Object... params) throws IOException {
-		os.write(String.format(format, params).getBytes());
+	void writeFormat(OutputStream os, FixedWidthFormat format, Object... params) throws IOException {
+		recordBuffer.setLength(0);
+		format.formatTo(recordBuffer, params);
+		os.write(recordBuffer.toString().getBytes());
 	}
 
 	@Override

@@ -3,6 +3,8 @@ package ca.bc.gov.nrs.vdyp.model;
 import java.util.Objects;
 import java.util.function.IntUnaryOperator;
 
+import ca.bc.gov.nrs.vdyp.common.FixedWidthFormat;
+
 public class PolygonIdentifier {
 
 	public static final int MAPSHEET_LENGTH = 9;
@@ -44,8 +46,15 @@ public class PolygonIdentifier {
 		return new PolygonIdentifier(base, Integer.parseInt(year));
 	}
 
-	private static final String FORMAT = "%-" + BASE_LENGTH + "s%" + YEAR_LENGTH + "d";
-	private static final String COMPACT_FORMAT = "%s(%" + YEAR_LENGTH + "d)";
+	private static final FixedWidthFormat FORMAT = FixedWidthFormat
+			.compile("%-" + BASE_LENGTH + "s%" + YEAR_LENGTH + "d");
+	private static final FixedWidthFormat COMPACT_FORMAT = FixedWidthFormat.compile("%s(%" + YEAR_LENGTH + "d)");
+
+	/**
+	 * The result of {@link #toString()}, computed on first use. The identifier is immutable and output writers format
+	 * it for every record they write.
+	 */
+	private String asString;
 
 	/**
 	 * Return the <code>base</code> (a.k.a. <code>name</code>) of the Polygon. These terms are synonomous.
@@ -71,13 +80,17 @@ public class PolygonIdentifier {
 
 	@Override
 	public String toString() {
-		String result = FORMAT.formatted(base, year);
-		assert (result.length() == ID_LENGTH);
+		String result = asString;
+		if (result == null) {
+			result = FORMAT.format(base, year);
+			assert (result.length() == ID_LENGTH);
+			asString = result;
+		}
 		return result;
 	}
 
 	public String toStringCompact() {
-		return COMPACT_FORMAT.formatted(base.trim(), year);
+		return COMPACT_FORMAT.format(base.trim(), year);
 	}
 
 	@Override
