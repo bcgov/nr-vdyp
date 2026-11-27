@@ -1,8 +1,9 @@
 package ca.bc.gov.nrs.vdyp.model.projection;
 
 import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParseException;
+import ca.bc.gov.nrs.vdyp.model.ReadOnlyCapable;
 
-public abstract class ControlVariables {
+public abstract class ControlVariables implements ReadOnlyCapable {
 
 	private static final int DEFAULT_CONTROL_VARIABLE_VALUE = 0;
 
@@ -59,13 +60,12 @@ public abstract class ControlVariables {
 	 * {@link UnsupportedOperationException}. Used when the control variables are shared between runs. They can not be
 	 * made modifiable again.
 	 */
+	@Override
 	public void makeReadOnly() {
 		readOnly = true;
 	}
 
-	/**
-	 * @return whether {@link #makeReadOnly} has been called
-	 */
+	@Override
 	public boolean isReadOnly() {
 		return readOnly;
 	}

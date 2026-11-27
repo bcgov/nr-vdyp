@@ -21,6 +21,7 @@ import ca.bc.gov.nrs.vdyp.model.GenusDefinitionMap;
 import ca.bc.gov.nrs.vdyp.model.GrowthFiatDetails;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap;
 import ca.bc.gov.nrs.vdyp.model.ModelCoefficients;
+import ca.bc.gov.nrs.vdyp.model.ReadOnlyCapable;
 import ca.bc.gov.nrs.vdyp.model.ReadOnlyCoefficients;
 import ca.bc.gov.nrs.vdyp.model.ReadOnlyDoubleCoefficients;
 import ca.bc.gov.nrs.vdyp.model.ReadOnlyMatrixMap;
@@ -39,8 +40,8 @@ import ca.bc.gov.nrs.vdyp.model.projection.ControlVariables;
  * {@link ReadOnlyDoubleCoefficients} copy</li>
  * <li>{@link Map} and {@link List}: an unmodifiable view, so a map subclass that overrides {@code get} keeps its
  * behaviour</li>
- * <li>{@link BaseDebugSettings} and {@link ControlVariables}: the same object, made read only, since code depends on
- * their exact subclasses</li>
+ * <li>{@link ReadOnlyCapable} (for example {@link BaseDebugSettings} and {@link ControlVariables}): the same object,
+ * made read only in place, since code depends on their exact subclasses</li>
  * </ul>
  * Values nested in these are made read only too. Types that are already immutable are kept as they are. A value of any
  * other type causes an {@link IllegalArgumentException}, so that a new type of parsed value can not be shared without
@@ -134,13 +135,9 @@ public final class SharedControlMapValues {
 		if (value instanceof Optional<?> optional) {
 			return optional.map(this::readOnly);
 		}
-		if (value instanceof BaseDebugSettings debugSettings) {
-			debugSettings.makeReadOnly();
-			return debugSettings;
-		}
-		if (value instanceof ControlVariables controlVariables) {
-			controlVariables.makeReadOnly();
-			return controlVariables;
+		if (value instanceof ReadOnlyCapable readOnlyCapable) {
+			readOnlyCapable.makeReadOnly();
+			return readOnlyCapable;
 		}
 		throw new IllegalArgumentException(
 				"No read only form is defined for a shared control map value of type " + value.getClass().getName()

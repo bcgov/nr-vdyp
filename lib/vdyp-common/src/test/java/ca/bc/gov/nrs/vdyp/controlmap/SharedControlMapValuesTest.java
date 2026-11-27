@@ -27,6 +27,7 @@ import ca.bc.gov.nrs.vdyp.model.MatrixMap3Impl;
 import ca.bc.gov.nrs.vdyp.model.MatrixMapImpl;
 import ca.bc.gov.nrs.vdyp.model.ModelCoefficients;
 import ca.bc.gov.nrs.vdyp.model.NonprimaryHLCoefficients;
+import ca.bc.gov.nrs.vdyp.model.ReadOnlyCapable;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.UtilizationVector;
 import ca.bc.gov.nrs.vdyp.model.projection.ProcessingDebugSettings;
@@ -204,6 +205,28 @@ class SharedControlMapValuesTest {
 		assertThat(settings.isReadOnly(), is(true));
 		assertThat(settings.getValue(2), is(2));
 		assertThrows(UnsupportedOperationException.class, () -> settings.setValue(2, 3));
+	}
+
+	@Test
+	void testAnyReadOnlyCapableValueIsMadeReadOnlyInPlace() {
+		var value = new ReadOnlyCapable() {
+			private boolean readOnly;
+
+			@Override
+			public void makeReadOnly() {
+				readOnly = true;
+			}
+
+			@Override
+			public boolean isReadOnly() {
+				return readOnly;
+			}
+		};
+
+		var result = readOnly("CUSTOM", value).get("CUSTOM");
+
+		assertThat(result, sameInstance(value));
+		assertThat(value.isReadOnly(), is(true));
 	}
 
 	@Test

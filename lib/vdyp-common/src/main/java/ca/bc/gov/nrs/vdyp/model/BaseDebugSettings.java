@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory;
  * <p>
  * See IPSJF155, appendix IX, details.
  */
-public class BaseDebugSettings implements DebugSettings {
+public class BaseDebugSettings implements DebugSettings, ReadOnlyCapable {
 
 	private static final Logger logger = LoggerFactory.getLogger(BaseDebugSettings.class);
 
@@ -42,13 +42,12 @@ public class BaseDebugSettings implements DebugSettings {
 	 * Make these settings read only, so that {@link #setValue} throws {@link UnsupportedOperationException}. Used when
 	 * the settings are shared between runs. Settings can not be made modifiable again.
 	 */
+	@Override
 	public void makeReadOnly() {
 		readOnly = true;
 	}
 
-	/**
-	 * @return whether {@link #makeReadOnly} has been called
-	 */
+	@Override
 	public boolean isReadOnly() {
 		return readOnly;
 	}
