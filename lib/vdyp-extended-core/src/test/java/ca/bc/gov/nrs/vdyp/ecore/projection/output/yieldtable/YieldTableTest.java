@@ -876,12 +876,11 @@ class YieldTableTest {
 		var stringContent = new String(csvContent);
 		var vdyp8ResultYieldTable = new ResultYieldTable(stringContent);
 
-		// FIXME this unit test needs to be updated to not fail when the current year changes SEE VDYP-897
 		var string7Content = Files
 				.readString(Path.of(resourceFolderPath.toString(), "vdyp7_Output_YldTbl-do-suppress.csv"));
 		var vdyp7ResultYieldTable = new ResultYieldTable(string7Content);
 
-		ResultYieldTable.compareWithTolerance(vdyp7ResultYieldTable, vdyp8ResultYieldTable, 0.01);
+		ResultYieldTable.compareWithTolerance(vdyp7ResultYieldTable, vdyp8ResultYieldTable, 0.01, "PRJ_MODE"::equals);
 	}
 
 	@Test

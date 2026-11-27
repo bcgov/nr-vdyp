@@ -8,6 +8,7 @@ import java.io.StringReader;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
@@ -58,6 +59,12 @@ public class ResultYieldTable extends HashMap<String, Map<String, Map<String, Ma
 	}
 
 	public static void compareWithTolerance(ResultYieldTable yt1, ResultYieldTable yt2, double tolerance) {
+		compareWithTolerance(yt1, yt2, tolerance, fieldName -> false);
+	}
+
+	public static void compareWithTolerance(
+			ResultYieldTable yt1, ResultYieldTable yt2, double tolerance, Predicate<String> ignoredFields
+	) {
 
 		assertEquals(yt1.keySet(), yt2.keySet());
 
@@ -80,6 +87,10 @@ public class ResultYieldTable extends HashMap<String, Map<String, Map<String, Ma
 					assertEquals(r1.keySet(), r2.keySet());
 
 					for (var field : r1.entrySet()) {
+						if (ignoredFields.test(field.getKey())) {
+							continue;
+						}
+
 						var f1 = field.getValue();
 						var f2 = r2.get(field.getKey());
 
