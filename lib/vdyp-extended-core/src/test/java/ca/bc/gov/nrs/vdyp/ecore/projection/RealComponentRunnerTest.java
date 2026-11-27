@@ -4,6 +4,7 @@ import static ca.bc.gov.nrs.vdyp.test.TestUtils.LAYER_CSV_HEADER_LINE;
 import static ca.bc.gov.nrs.vdyp.test.TestUtils.POLYGON_CSV_HEADER_LINE;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.causedBy;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasSize;
@@ -14,9 +15,13 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -45,6 +50,9 @@ import ca.bc.gov.nrs.vdyp.ecore.projection.model.PolygonMessage;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.PolygonReportingInfo;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ProjectionTypeCode;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ReturnCode;
+import ca.bc.gov.nrs.vdyp.io.FileResolver;
+import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
+import ca.bc.gov.nrs.vdyp.io.parse.control.BaseControlParser;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
 class RealComponentRunnerTest {
@@ -406,16 +414,33 @@ class RealComponentRunnerTest {
 	@Nested
 	class RunApp {
 
+		private final Map<String, Object> controlMap = new HashMap<>();
+
+		private final List<String> controlMapCalls = new ArrayList<>();
+
+		private RealComponentRunner runner() {
+			return new RealComponentRunner() {
+				@Override
+				Map<String, Object> createControlMap(
+						BaseControlParser<?> parser, String templateControlFile, List<String> runControlFiles,
+						FileResolver runResolver
+				) throws IOException {
+					controlMapCalls.add(templateControlFile + " " + runControlFiles + " " + runResolver.toPath(""));
+					return controlMap;
+				}
+			};
+		}
+
 		@Test
 		void testSuccess() throws Exception {
 			var em = EasyMock.createControl();
-			var runner = new RealComponentRunner();
+			var runner = runner();
 
 			Polygon polygon = em.createMock(Polygon.class);
 			ProjectionTypeCode projectionTypeCode = ProjectionTypeCode.PRIMARY;
 			PolygonProjectionState state = em.createMock(PolygonProjectionState.class);
 			VdypApplicationIdentifier appToUse = VdypApplicationIdentifier.FIP_START;
-			List<String> controlFiles = List.of("Test.CTR");
+			String templateControlFile = "Test.CTR";
 			VdypApplication<?> app = em.createMock(VdypApplication.class);
 
 			Supplier<VdypApplication<?>> getApp = () -> app;
@@ -424,7 +449,8 @@ class RealComponentRunnerTest {
 			EasyMock.expect(state.getExecutionFolder()).andStubReturn(Path.of("TestPath"));
 
 			// Run the main processing
-			app.doMain(EasyMock.eq(Path.of("TestPath", "PRIMARY", "Test.CTR")));
+			EasyMock.expect(app.createControlFileParser()).andStubReturn(null);
+			app.doMain(EasyMock.anyObject(FileSystemFileResolver.class), EasyMock.same(controlMap));
 			EasyMock.expectLastCall().once(); // Success
 
 			// Handle success
@@ -441,7 +467,51 @@ class RealComponentRunnerTest {
 
 			em.replay();
 
-			runner.runApp(polygon, projectionTypeCode, state, appToUse, controlFiles, getApp, after);
+			runner.runApp(polygon, projectionTypeCode, state, appToUse, templateControlFile, List.of(), getApp, after);
+
+			em.verify();
+
+			// The control map is built from the template control file, resolving run files in the projection type
+			// folder
+			assertThat(controlMapCalls, contains("Test.CTR [] " + Path.of("TestPath", "PRIMARY").toAbsolutePath()));
+		}
+
+		@Test
+		void testControlMapFailureIsInitializationFailure() throws Exception {
+			var em = EasyMock.createControl();
+			var rootCause = new IOException("Test Exception");
+			var runner = new RealComponentRunner() {
+				@Override
+				Map<String, Object> createControlMap(
+						BaseControlParser<?> parser, String templateControlFile, List<String> runControlFiles,
+						FileResolver runResolver
+				) throws IOException {
+					throw rootCause;
+				}
+			};
+
+			Polygon polygon = em.createMock(Polygon.class);
+			ProjectionTypeCode projectionTypeCode = ProjectionTypeCode.PRIMARY;
+			PolygonProjectionState state = em.createMock(PolygonProjectionState.class);
+			VdypApplicationIdentifier appToUse = VdypApplicationIdentifier.FIP_START;
+			VdypApplication<?> app = em.createMock(VdypApplication.class);
+
+			Supplier<VdypApplication<?>> getApp = () -> app;
+			Consumer<VdypApplication<?>> after = em.createMock(Consumer.class);
+
+			EasyMock.expect(state.getExecutionFolder()).andStubReturn(Path.of("TestPath"));
+			EasyMock.expect(app.createControlFileParser()).andStubReturn(null);
+
+			// The app is not run, and the failure is recorded like any other initialization failure
+			state.setProcessingResults(ProjectionStageCode.Initial, projectionTypeCode, Optional.of(rootCause));
+			EasyMock.expectLastCall().once();
+
+			app.close();
+			EasyMock.expectLastCall().once();
+
+			em.replay();
+
+			runner.runApp(polygon, projectionTypeCode, state, appToUse, "Test.CTR", List.of(), getApp, after);
 
 			em.verify();
 		}
@@ -449,13 +519,13 @@ class RealComponentRunnerTest {
 		@Test
 		void testInitializationException() throws Exception {
 			var em = EasyMock.createControl();
-			var runner = new RealComponentRunner();
+			var runner = runner();
 
 			Polygon polygon = em.createMock(Polygon.class);
 			ProjectionTypeCode projectionTypeCode = ProjectionTypeCode.PRIMARY;
 			PolygonProjectionState state = em.createMock(PolygonProjectionState.class);
 			VdypApplicationIdentifier appToUse = VdypApplicationIdentifier.FIP_START;
-			List<String> controlFiles = List.of("Test.CTR");
+			String templateControlFile = "Test.CTR";
 			VdypApplication<?> app = em.createMock(VdypApplication.class);
 
 			var rootCause = new RuntimeException("Test Exception");
@@ -467,7 +537,8 @@ class RealComponentRunnerTest {
 			EasyMock.expect(state.getExecutionFolder()).andStubReturn(Path.of("TestPath"));
 
 			// Run the main processing
-			app.doMain(EasyMock.eq(Path.of("TestPath", "PRIMARY", "Test.CTR")));
+			EasyMock.expect(app.createControlFileParser()).andStubReturn(null);
+			app.doMain(EasyMock.anyObject(FileSystemFileResolver.class), EasyMock.same(controlMap));
 			EasyMock.expectLastCall().andThrow(appCause).once();
 
 			// Handle Failure
@@ -480,7 +551,7 @@ class RealComponentRunnerTest {
 
 			em.replay();
 
-			runner.runApp(polygon, projectionTypeCode, state, appToUse, controlFiles, getApp, after);
+			runner.runApp(polygon, projectionTypeCode, state, appToUse, templateControlFile, List.of(), getApp, after);
 
 			em.verify();
 		}
@@ -488,13 +559,13 @@ class RealComponentRunnerTest {
 		@Test
 		void testProcessingException() throws Exception {
 			var em = EasyMock.createControl();
-			var runner = new RealComponentRunner();
+			var runner = runner();
 
 			Polygon polygon = em.createMock(Polygon.class);
 			ProjectionTypeCode projectionTypeCode = ProjectionTypeCode.PRIMARY;
 			PolygonProjectionState state = em.createMock(PolygonProjectionState.class);
 			VdypApplicationIdentifier appToUse = VdypApplicationIdentifier.FIP_START;
-			List<String> controlFiles = List.of("Test.CTR");
+			String templateControlFile = "Test.CTR";
 			VdypApplication<?> app = em.createMock(VdypApplication.class);
 
 			var rootCause = new RuntimeException("Test Exception");
@@ -506,7 +577,8 @@ class RealComponentRunnerTest {
 			EasyMock.expect(state.getExecutionFolder()).andStubReturn(Path.of("TestPath"));
 
 			// Run the main processing
-			app.doMain(EasyMock.eq(Path.of("TestPath", "PRIMARY", "Test.CTR")));
+			EasyMock.expect(app.createControlFileParser()).andStubReturn(null);
+			app.doMain(EasyMock.anyObject(FileSystemFileResolver.class), EasyMock.same(controlMap));
 			EasyMock.expectLastCall().andThrow(appCause).once();
 
 			// Handle Failure
@@ -519,7 +591,7 @@ class RealComponentRunnerTest {
 
 			em.replay();
 
-			runner.runApp(polygon, projectionTypeCode, state, appToUse, controlFiles, getApp, after);
+			runner.runApp(polygon, projectionTypeCode, state, appToUse, templateControlFile, List.of(), getApp, after);
 
 			em.verify();
 		}
@@ -527,13 +599,13 @@ class RealComponentRunnerTest {
 		@Test
 		void testRuntimeException() throws Exception {
 			var em = EasyMock.createControl();
-			var runner = new RealComponentRunner();
+			var runner = runner();
 
 			Polygon polygon = em.createMock(Polygon.class);
 			ProjectionTypeCode projectionTypeCode = ProjectionTypeCode.PRIMARY;
 			PolygonProjectionState state = em.createMock(PolygonProjectionState.class);
 			VdypApplicationIdentifier appToUse = VdypApplicationIdentifier.FIP_START;
-			List<String> controlFiles = List.of("Test.CTR");
+			String templateControlFile = "Test.CTR";
 			VdypApplication<?> app = em.createMock(VdypApplication.class);
 
 			var rootCause = new RuntimeException("Test Exception");
@@ -544,7 +616,8 @@ class RealComponentRunnerTest {
 			EasyMock.expect(state.getExecutionFolder()).andStubReturn(Path.of("TestPath"));
 
 			// Run the main processing
-			app.doMain(EasyMock.eq(Path.of("TestPath", "PRIMARY", "Test.CTR")));
+			EasyMock.expect(app.createControlFileParser()).andStubReturn(null);
+			app.doMain(EasyMock.anyObject(FileSystemFileResolver.class), EasyMock.same(controlMap));
 			EasyMock.expectLastCall().andThrow(rootCause).once();
 
 			// Store exception result
@@ -564,7 +637,9 @@ class RealComponentRunnerTest {
 
 			var ex = assertThrows(
 					PolygonExecutionException.class,
-					() -> runner.runApp(polygon, projectionTypeCode, state, appToUse, controlFiles, getApp, after)
+					() -> runner.runApp(
+							polygon, projectionTypeCode, state, appToUse, templateControlFile, List.of(), getApp, after
+					)
 			);
 
 			assertThat(ex, causedBy(sameInstance(rootCause)));
@@ -575,13 +650,13 @@ class RealComponentRunnerTest {
 		@Test
 		void testExceptionWhileClosing() throws Exception {
 			var em = EasyMock.createControl();
-			var runner = new RealComponentRunner();
+			var runner = runner();
 
 			Polygon polygon = em.createMock(Polygon.class);
 			ProjectionTypeCode projectionTypeCode = ProjectionTypeCode.PRIMARY;
 			PolygonProjectionState state = em.createMock(PolygonProjectionState.class);
 			VdypApplicationIdentifier appToUse = VdypApplicationIdentifier.FIP_START;
-			List<String> controlFiles = List.of("Test.CTR");
+			String templateControlFile = "Test.CTR";
 			VdypApplication<?> app = em.createMock(VdypApplication.class);
 
 			var rootCause = new RuntimeException("Test Exception");
@@ -592,7 +667,8 @@ class RealComponentRunnerTest {
 			EasyMock.expect(state.getExecutionFolder()).andStubReturn(Path.of("TestPath"));
 
 			// Run the main processing
-			app.doMain(EasyMock.eq(Path.of("TestPath", "PRIMARY", "Test.CTR")));
+			EasyMock.expect(app.createControlFileParser()).andStubReturn(null);
+			app.doMain(EasyMock.anyObject(FileSystemFileResolver.class), EasyMock.same(controlMap));
 			EasyMock.expectLastCall().once();
 
 			// Handle Success
@@ -620,7 +696,9 @@ class RealComponentRunnerTest {
 
 			var ex = assertThrows(
 					PolygonExecutionException.class,
-					() -> runner.runApp(polygon, projectionTypeCode, state, appToUse, controlFiles, getApp, after)
+					() -> runner.runApp(
+							polygon, projectionTypeCode, state, appToUse, templateControlFile, List.of(), getApp, after
+					)
 			);
 
 			assertThat(ex, causedBy(sameInstance(rootCause)));

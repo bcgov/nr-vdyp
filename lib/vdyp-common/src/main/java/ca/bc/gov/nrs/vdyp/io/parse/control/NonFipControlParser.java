@@ -1,6 +1,6 @@
 package ca.bc.gov.nrs.vdyp.io.parse.control;
 
-import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -10,11 +10,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
-import ca.bc.gov.nrs.vdyp.io.FileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.BasalAreaYieldParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.QuadraticMeanDiameterYieldParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.UpperBoundsParser;
-import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParser;
 import ca.bc.gov.nrs.vdyp.model.DebugSettings;
 
@@ -54,34 +52,33 @@ public abstract class NonFipControlParser<S extends DebugSettings> extends Start
 		;
 	}
 
+	/**
+	 * The data file parser factories and output file locations are applied afterwards, by {@link #applyRunModifiers}.
+	 */
 	@Override
-	protected void applyAllModifiers(Map<String, Object> map, Map<String, FileResolver> fileResolver)
-			throws ResourceParseException, IOException {
-		applyModifiers(map, basicDefinitions, fileResolver);
+	protected List<ControlMapModifier> sharedModifiers() {
+		List<ControlMapModifier> modifiers = new ArrayList<>();
+
+		modifiers.addAll(basicDefinitions);
 
 		// Read Groups
 
-		applyModifiers(map, groupDefinitions, fileResolver);
+		modifiers.addAll(groupDefinitions);
 
-		// Initialize data file parser factories
-
-		applyModifiers(map, inputFileParsers(), fileResolver);
-
-		applyModifiers(map, outputFiles(), fileResolver);
-
-		applyModifiers(map, siteCurves, fileResolver);
+		modifiers.addAll(siteCurves);
 
 		// Coeff for Empirical relationships
 
-		applyModifiers(map, coefficients, fileResolver);
+		modifiers.addAll(coefficients);
 
 		// Initiation items NOT for FIPSTART
 
-		applyModifiers(map, nonFipStart, fileResolver);
+		modifiers.addAll(nonFipStart);
 
 		// RD_E198
-		applyModifiers(map, additionalModifiers, fileResolver);
+		modifiers.addAll(additionalModifiers);
 
+		return modifiers;
 	}
 
 	@Override

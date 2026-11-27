@@ -93,8 +93,29 @@ public class ControlFileParser implements ResourceParser<Map<String, Object>> {
 	@Override
 	public Map<String, Object> parse(InputStream input, Map<String, Object> control)
 			throws IOException, ResourceParseException {
-		Map<String, Object> result = control;
-		result = lineParser.parse(input, result, (map, r, line) -> {
+		Map<String, Object> result = parseEntries(input, control, control);
+		for (var e : defaultValueGenerators.entrySet()) {
+			result.putIfAbsent(e.getKey(), e.getValue().get());
+		}
+		return result;
+	}
+
+	/**
+	 * Parse a control file, returning only the entries that the file itself specifies. No default values are added for
+	 * entries the file does not mention, and the given control map is not modified.
+	 *
+	 * @param input   the control file content
+	 * @param control the control map used as context while parsing values; it is copied, not modified
+	 * @return a new map holding the entries present in the file
+	 */
+	public Map<String, Object> parseExplicitEntries(InputStream input, Map<String, Object> control)
+			throws IOException, ResourceParseException {
+		return parseEntries(input, new HashMap<>(), new HashMap<>(control));
+	}
+
+	private Map<String, Object> parseEntries(InputStream input, Map<String, Object> result, Map<String, Object> control)
+			throws IOException, ResourceParseException {
+		return lineParser.parse(input, result, (map, r, line) -> {
 			Integer index = (Integer) map.get("index");
 			String extend = (String) map.get("extend");
 			String restOfLine = Utils.<String>optSafe(map.get("restOfLine")).orElse("");
@@ -116,13 +137,13 @@ public class ControlFileParser implements ResourceParser<Map<String, Object>> {
 			Object value = valueParsers.getOrDefault(index, defaultValueParser).parse(controlString, control);
 
 			r.put(key, value);
+			if (r != control) {
+				// Keep the context current so later entries can depend on earlier ones, as they do in parse
+				control.put(key, value);
+			}
 
 			return r;
 		}, Collections.emptyMap());
-		for (var e : defaultValueGenerators.entrySet()) {
-			result.putIfAbsent(e.getKey(), e.getValue().get());
-		}
-		return result;
 	}
 
 	private String getKeyForIndex(Integer index) {

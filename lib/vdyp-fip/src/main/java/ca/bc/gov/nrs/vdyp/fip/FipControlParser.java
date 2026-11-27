@@ -1,6 +1,6 @@
 package ca.bc.gov.nrs.vdyp.fip;
 
-import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -12,11 +12,9 @@ import org.slf4j.LoggerFactory;
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.fip.model.FipDebugSettings;
-import ca.bc.gov.nrs.vdyp.io.FileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.DebugSettingsParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.ModifierParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.StockingClassFactorParser;
-import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.control.ControlMapModifier;
 import ca.bc.gov.nrs.vdyp.io.parse.control.ControlMapValueReplacer;
 import ca.bc.gov.nrs.vdyp.io.parse.control.OutputFileLocationResolver;
@@ -73,34 +71,33 @@ public class FipControlParser extends StartApplicationControlParser<FipDebugSett
 			new ModifierParser(VdypApplicationIdentifier.VRI_START)
 	);
 
+	/**
+	 * The data file parser factories and output file locations are applied afterwards, by {@link #applyRunModifiers}.
+	 */
 	@Override
-	protected void applyAllModifiers(Map<String, Object> map, Map<String, FileResolver> fileResolver)
-			throws ResourceParseException, IOException {
-		applyModifiers(map, basicDefinitions, fileResolver);
+	protected List<ControlMapModifier> sharedModifiers() {
+		List<ControlMapModifier> modifiers = new ArrayList<>();
+
+		modifiers.addAll(basicDefinitions);
 
 		// Read Groups
 
-		applyModifiers(map, groupDefinitions, fileResolver);
+		modifiers.addAll(groupDefinitions);
 
-		// Initialize data file parser factories
+		modifiers.addAll(fipstartOnly);
 
-		applyModifiers(map, inputFileParsers(), fileResolver);
-
-		applyModifiers(map, outputFiles(), fileResolver);
-
-		applyModifiers(map, fipstartOnly, fileResolver);
-
-		applyModifiers(map, siteCurves, fileResolver);
+		modifiers.addAll(siteCurves);
 
 		// Coeff for Empirical relationships
 
-		applyModifiers(map, coefficients, fileResolver);
+		modifiers.addAll(coefficients);
 
 		// Modifiers, IPSJF155-Appendix XII
 
 		// RD_E198
-		applyModifiers(map, additionalModifiers, fileResolver);
+		modifiers.addAll(additionalModifiers);
 
+		return modifiers;
 	}
 
 	@Override

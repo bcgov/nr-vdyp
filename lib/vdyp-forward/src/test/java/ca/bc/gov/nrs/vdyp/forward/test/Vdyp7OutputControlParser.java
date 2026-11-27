@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.slf4j.Logger;
@@ -23,6 +24,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.coe.GenusDefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.VolumeEquationGroupParser;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.control.BaseControlParser;
+import ca.bc.gov.nrs.vdyp.io.parse.control.ControlMapModifier;
 import ca.bc.gov.nrs.vdyp.io.parse.control.ControlMapValueReplacer;
 import ca.bc.gov.nrs.vdyp.io.parse.control.OutputFileLocationResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.control.ResourceControlMapModifier;
@@ -134,6 +136,12 @@ public class Vdyp7OutputControlParser extends BaseControlParser<ProcessingDebugS
 	@Override
 	protected List<ResourceControlMapModifier> configurationFileParsers() {
 		return new ArrayList<>(vdypForwardConfigurationParsers.values());
+	}
+
+	@Override
+	protected List<ControlMapModifier> sharedModifiers() {
+		return orderedControlKeys.stream().<ControlMapModifier>map(vdypForwardConfigurationParsers::get)
+				.filter(Objects::nonNull).toList();
 	}
 
 	@Override

@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory;
  * <p>
  * See IPSJF155, appendix IX, details.
  */
-public class BaseDebugSettings implements DebugSettings {
+public class BaseDebugSettings implements DebugSettings, ReadOnlyCapable {
 
 	private static final Logger logger = LoggerFactory.getLogger(BaseDebugSettings.class);
 
@@ -35,6 +35,22 @@ public class BaseDebugSettings implements DebugSettings {
 	private final int[] settings;
 
 	private final Object[] cache;
+
+	private boolean readOnly = false;
+
+	/**
+	 * Make these settings read only, so that {@link #setValue} throws {@link UnsupportedOperationException}. Used when
+	 * the settings are shared between runs. Settings can not be made modifiable again.
+	 */
+	@Override
+	public void makeReadOnly() {
+		readOnly = true;
+	}
+
+	@Override
+	public boolean isReadOnly() {
+		return readOnly;
+	}
 
 	private void validateSettingNumber(int settingNumber) {
 		if (settingNumber < 1 || settingNumber > MAX_DEBUG_SETTINGS) {
@@ -149,6 +165,12 @@ public class BaseDebugSettings implements DebugSettings {
 	 */
 	@Override
 	public void setValue(int settingNumber, int value) {
+		if (readOnly) {
+			throw new UnsupportedOperationException(
+					"These debug settings are shared between runs and are read only; debug setting " + settingNumber
+							+ " can not be changed"
+			);
+		}
 		logger.atWarn().addArgument(settingNumber).addArgument(getValue(settingNumber)).addArgument(value)
 				.setMessage("Changing debug setting {} from {} to {}.  This should only happen when debugging/testing.")
 				.log();

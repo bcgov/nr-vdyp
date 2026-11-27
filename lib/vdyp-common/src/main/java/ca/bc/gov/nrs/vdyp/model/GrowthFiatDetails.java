@@ -124,16 +124,18 @@ public class GrowthFiatDetails {
 		return mixedCoefficients[index];
 	}
 
+	// The array getters return copies, since instances are shared between runs (see SharedControlMapValues)
+
 	public Float[] getAges() {
-		return ages;
+		return ages.clone();
 	}
 
 	public Float[] getCoefficients() {
-		return coefficients;
+		return coefficients.clone();
 	}
 
 	public Float[] getMixedCoefficients() {
-		return mixedCoefficients;
+		return mixedCoefficients.clone();
 	}
 
 	public float calculateCoefficient(float age) {

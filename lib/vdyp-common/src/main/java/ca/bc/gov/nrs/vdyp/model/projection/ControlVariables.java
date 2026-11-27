@@ -1,13 +1,15 @@
 package ca.bc.gov.nrs.vdyp.model.projection;
 
 import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParseException;
+import ca.bc.gov.nrs.vdyp.model.ReadOnlyCapable;
 
-public abstract class ControlVariables {
+public abstract class ControlVariables implements ReadOnlyCapable {
 
 	private static final int DEFAULT_CONTROL_VARIABLE_VALUE = 0;
 
 	private final int[] controlVariableValues = new int[10];
 	private final int maximum;
+	private boolean readOnly = false;
 
 	protected ControlVariables(Integer[] controlVariableValues, int maximum) throws ValueParseException {
 		int index = 0;
@@ -44,6 +46,27 @@ public abstract class ControlVariables {
 	 * @throws ValueParseException
 	 */
 	public void setControlVariable(int elementNumber, int value) {
+		if (readOnly) {
+			throw new UnsupportedOperationException(
+					"These control variables are shared between runs and are read only; control variable "
+							+ elementNumber + " can not be changed"
+			);
+		}
 		controlVariableValues[elementNumber - 1] = value;
+	}
+
+	/**
+	 * Make these control variables read only, so that {@link #setControlVariable} throws
+	 * {@link UnsupportedOperationException}. Used when the control variables are shared between runs. They can not be
+	 * made modifiable again.
+	 */
+	@Override
+	public void makeReadOnly() {
+		readOnly = true;
+	}
+
+	@Override
+	public boolean isReadOnly() {
+		return readOnly;
 	}
 }
