@@ -167,9 +167,37 @@ public class RealComponentRunner implements ComponentRunner {
 		});
 	}
 
+	/**
+	 * Mirrors the <code>V7Int_CanProjectProjectionType</code> guard around <code>vdyp7core_runfipmodel</code> in
+	 * <code>lcl_PerformFIPModel</code> and around <code>vdyp7core_runvrimodel</code> in
+	 * <code>lcl_PerformVRIModel</code>. When projections of the given type have already been disabled (for example
+	 * because a site index below {@link Vdyp7Constants#LOW_SITE_INDEX_THRESHOLD} was computed), VDYP7 does not run the
+	 * start model. Its run code stays at 0 and the stage is treated as successful, so the yield table is still
+	 * generated, without projected yields.
+	 *
+	 * @return true if the start model must not be run, in which case a successful result has been recorded
+	 */
+	private static boolean skipInitialProcessingIfProjectionDisabled(
+			Polygon polygon, ProjectionTypeCode projectionTypeCode, PolygonProjectionState state
+	) {
+		if (polygon.doAllowProjectionOfType(projectionTypeCode)) {
+			return false;
+		}
+
+		logger.debug(
+				"{}: projections of type {} are disabled; not running the initial processing model", polygon,
+				projectionTypeCode
+		);
+		state.setProcessingResults(ProjectionStageCode.Initial, projectionTypeCode, Optional.empty());
+		return true;
+	}
+
 	@Override
 	public void runFipStart(Polygon polygon, ProjectionTypeCode projectionTypeCode, PolygonProjectionState state)
 			throws PolygonExecutionException {
+		if (skipInitialProcessingIfProjectionDisabled(polygon, projectionTypeCode, state)) {
+			return;
+		}
 
 		runApp(
 				polygon, projectionTypeCode, state, VdypApplicationIdentifier.FIP_START, //
@@ -186,6 +214,10 @@ public class RealComponentRunner implements ComponentRunner {
 	@Override
 	public void runVriStart(Polygon polygon, ProjectionTypeCode projectionTypeCode, PolygonProjectionState state)
 			throws PolygonExecutionException {
+		if (skipInitialProcessingIfProjectionDisabled(polygon, projectionTypeCode, state)) {
+			return;
+		}
+
 		runApp(
 				polygon, projectionTypeCode, state, VdypApplicationIdentifier.VRI_START, //
 				Vdyp7Constants.VRI_START_CONTROL_FILE_NAME, List.of(), VriStart::new, //

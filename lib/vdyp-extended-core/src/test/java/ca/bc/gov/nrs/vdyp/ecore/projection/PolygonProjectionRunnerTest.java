@@ -138,7 +138,8 @@ public class PolygonProjectionRunnerTest {
 
 	@Test
 	void testUnsupportedSpeciesFIPStart() throws AbstractProjectionRequestException, IOException {
-		addStand("PL", 78.0, 8.0, 10.0);
+		// 100% keeps the projection type enabled; a disabled projection type does not run FIPSTART (as in VDYP7).
+		addStand("PL", 100.0, 8.0, 10.0);
 		var context = new ProjectionContext(ProjectionRequestKind.HCSV, "TEST", params, false);
 		layer.setAssignedProjectionType(ProjectionTypeCode.PRIMARY);
 		polygon.doCompleteDefinition(context);

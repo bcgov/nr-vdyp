@@ -72,6 +72,47 @@ class RealComponentRunnerTest {
 		assertTrue(ex.getMessage().startsWith("Polygon 13919428"));
 	}
 
+	enum StartModel {
+		FIP_START, VRI_START
+	}
+
+	private void runStartModel(StartModel startModel, Polygon polygon, PolygonProjectionState state)
+			throws PolygonExecutionException {
+		if (startModel == StartModel.FIP_START) {
+			unit.runFipStart(polygon, ProjectionTypeCode.PRIMARY, state);
+		} else {
+			unit.runVriStart(polygon, ProjectionTypeCode.PRIMARY, state);
+		}
+	}
+
+	@ParameterizedTest
+	@EnumSource(StartModel.class)
+	void testStartModelIsNotRunWhenProjectionTypeIsDisabled(StartModel startModel) throws Exception {
+
+		var polygon = new Polygon.Builder().featureId(3643870).build();
+		polygon.disableProjectionsOfType(ProjectionTypeCode.PRIMARY);
+		// No execution folder is set, so running the model would fail.
+		var state = new PolygonProjectionState();
+
+		runStartModel(startModel, polygon, state);
+
+		assertThat(
+				state.getProcessingResults(ProjectionStageCode.Initial, ProjectionTypeCode.PRIMARY),
+				is(Optional.empty())
+		);
+	}
+
+	@ParameterizedTest
+	@EnumSource(StartModel.class)
+	void testStartModelIsRunWhenProjectionTypeIsEnabled(StartModel startModel) {
+
+		var polygon = new Polygon.Builder().featureId(3643870).build();
+		var state = new PolygonProjectionState();
+
+		var ex = assertThrows(PolygonExecutionException.class, () -> runStartModel(startModel, polygon, state));
+		assertTrue(ex.getMessage().startsWith("Polygon 3643870"));
+	}
+
 	@Test
 	void testRunBackFailsWhenExecutionFolderNotSet() {
 

@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.vdyp.ecore.projection;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.InputStream;
@@ -8,8 +9,10 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
@@ -95,6 +98,57 @@ class ITProjectionRunner {
 				var expectedRows = failure == Failure.NONE ? Map.of("13919428", 2L, "23116780", 2L, "23116781", 2L)
 						: Map.of("13919428", 2L, "23116781", 2L);
 				assertEquals(expectedRows, rowsByPolygon, errors);
+			}
+		}
+	}
+
+	@Test
+	void lowSiteIndexPolygonsSkipStartModelButStillProduceYieldTables() throws Exception {
+		var parameters = new Parameters().ageStart(0).ageEnd(250).ageIncrement(10)
+				.outputFormat(Parameters.OutputFormat.CSV_YIELD_TABLE)
+				.addSelectedExecutionOptionsItem(ExecutionOption.DO_ENABLE_ERROR_LOGGING)
+				.addSelectedExecutionOptionsItem(ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_LAYER)
+				.addSelectedExecutionOptionsItem(ExecutionOption.DO_INCLUDE_POLYGON_RECORD_ID_IN_YIELD_TABLE)
+				.addSelectedExecutionOptionsItem(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES);
+
+		try (
+				var runner = new ProjectionRunner(ProjectionRequestKind.HCSV, "low-site-index", parameters, false);
+				InputStream polygons = getClass().getResourceAsStream("/test-data/low-site-index/polygons.csv");
+				InputStream layers = getClass().getResourceAsStream("/test-data/low-site-index/layers.csv")
+		) {
+			runner.run(
+					Map.of(
+							ParameterNames.HCSV_POLYGON_INPUT_DATA, polygons, ParameterNames.HCSV_LAYERS_INPUT_DATA,
+							layers
+					)
+			);
+
+			String errors;
+			try (var errorStream = runner.getErrorStream()) {
+				errors = new String(errorStream.readAllBytes(), StandardCharsets.UTF_8);
+			}
+			assertEquals(4L, errors.lines().filter(line -> line.contains("very low site index")).count(), errors);
+			assertFalse(errors.contains("CORELIBRARYERROR"), errors);
+			assertEquals(4, runner.getLastRunPolygonsProcessed());
+			assertEquals(0, runner.getLastRunPolygonsSkipped());
+
+			try (
+					var yieldStream = runner.getContext().getYieldTables().get(0).getAsStream();
+					var csv = new CSVReader(new InputStreamReader(yieldStream, StandardCharsets.UTF_8))
+			) {
+				var header = List.of(csv.readNext());
+				int featureIdColumn = header.indexOf("FEATURE_ID");
+				int wholeStemVolumeColumn = header.indexOf("PRJ_VOL_WS");
+				assertTrue(featureIdColumn >= 0, header.toString());
+				assertTrue(wholeStemVolumeColumn >= 0, header.toString());
+
+				var rows = csv.readAll();
+				assertEquals(
+						Set.of("3643870", "3643914", "3643985", "6429825"),
+						rows.stream().map(row -> row[featureIdColumn]).collect(Collectors.toSet()), errors
+				);
+				// The projection type is disabled, so no volumes are projected.
+				assertTrue(rows.stream().allMatch(row -> row[wholeStemVolumeColumn].isBlank()), errors);
 			}
 		}
 	}
