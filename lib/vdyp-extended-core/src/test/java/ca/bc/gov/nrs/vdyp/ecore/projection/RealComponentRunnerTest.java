@@ -76,6 +76,15 @@ class RealComponentRunnerTest {
 		FIP_START, VRI_START
 	}
 
+	private void runStartModel(StartModel startModel, Polygon polygon, PolygonProjectionState state)
+			throws PolygonExecutionException {
+		if (startModel == StartModel.FIP_START) {
+			unit.runFipStart(polygon, ProjectionTypeCode.PRIMARY, state);
+		} else {
+			unit.runVriStart(polygon, ProjectionTypeCode.PRIMARY, state);
+		}
+	}
+
 	@ParameterizedTest
 	@EnumSource(StartModel.class)
 	void testStartModelIsNotRunWhenProjectionTypeIsDisabled(StartModel startModel) throws Exception {
@@ -85,11 +94,7 @@ class RealComponentRunnerTest {
 		// No execution folder is set, so running the model would fail.
 		var state = new PolygonProjectionState();
 
-		if (startModel == StartModel.FIP_START) {
-			unit.runFipStart(polygon, ProjectionTypeCode.PRIMARY, state);
-		} else {
-			unit.runVriStart(polygon, ProjectionTypeCode.PRIMARY, state);
-		}
+		runStartModel(startModel, polygon, state);
 
 		assertThat(
 				state.getProcessingResults(ProjectionStageCode.Initial, ProjectionTypeCode.PRIMARY),
@@ -104,13 +109,7 @@ class RealComponentRunnerTest {
 		var polygon = new Polygon.Builder().featureId(3643870).build();
 		var state = new PolygonProjectionState();
 
-		var ex = assertThrows(PolygonExecutionException.class, () -> {
-			if (startModel == StartModel.FIP_START) {
-				unit.runFipStart(polygon, ProjectionTypeCode.PRIMARY, state);
-			} else {
-				unit.runVriStart(polygon, ProjectionTypeCode.PRIMARY, state);
-			}
-		});
+		var ex = assertThrows(PolygonExecutionException.class, () -> runStartModel(startModel, polygon, state));
 		assertTrue(ex.getMessage().startsWith("Polygon 3643870"));
 	}
 
