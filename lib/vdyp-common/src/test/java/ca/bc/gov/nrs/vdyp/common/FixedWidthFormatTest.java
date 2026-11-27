@@ -122,7 +122,8 @@ class FixedWidthFormatTest {
 		assertThat(format.argumentCount(), is(2));
 		assertThrows(MissingFormatArgumentException.class, () -> format.format(1));
 		assertThrows(IllegalFormatConversionException.class, () -> format.format("x", "y"));
-		assertThrows(IllegalFormatConversionException.class, () -> FixedWidthFormat.compile("%f").format(1));
+		var floatFormat = FixedWidthFormat.compile("%f");
+		assertThrows(IllegalFormatConversionException.class, () -> floatFormat.format(1));
 	}
 
 	@ParameterizedTest
