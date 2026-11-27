@@ -2,7 +2,6 @@ package ca.bc.gov.nrs.vdyp.backend.endpoints.projection.hcsv._44grpA;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.emptyString;
 import static org.hamcrest.Matchers.not;
@@ -82,8 +81,8 @@ class Hcsv_44GrpATest extends BaseHttpProjectionRequestTest {
 		Assert.assertTrue(csvEntryContent.length() > 0);
 	}
 
-	// This test reports a specific error in the processing of polygon 8489341.
-	// @Disabled
+	// Polygon 8489341 has a computed site index (1.96) below the 2.0 threshold, so its primary projection type is
+	// disabled. As in VDYP7, VRISTART is not run for a disabled projection type, but a yield table is still produced.
 	@Test
 	void run44GroupA_8489341_Test() throws IOException {
 		logger.info("Starting run44GroupA_8489341_Test");
@@ -92,10 +91,7 @@ class Hcsv_44GrpATest extends BaseHttpProjectionRequestTest {
 
 		var errorEntryContent = zipEntries.get("ErrorLog.txt");
 		assertThat(
-				errorEntryContent, allOf(
-						containsString("an error occurred processing the VRISTART model: "), //
-						containsString("Required Site index was missing") //
-				)
+				errorEntryContent, containsString("very low site index 1.96. Site index not calculated") //
 		);
 		var csvEntryContent = zipEntries.get("YieldTable.csv");
 		assertThat(csvEntryContent, not(emptyString()));
