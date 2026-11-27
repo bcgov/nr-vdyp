@@ -164,6 +164,7 @@ class ProjectionResponseZipFileTests {
 		String entry1Content = new String(TestHelper.readZipEntry(zipFile, entry1));
 		assertTrue(entry1Content.length() > 0);
 
+		assertEquals(Parameters.JSON_FILE_NAME, zipFile.getNextEntry().getName());
 		assertNull(zipFile.getNextEntry());
 
 		Utils.close(zipInputStream);

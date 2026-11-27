@@ -210,7 +210,14 @@ class Hcsv_Vdyp7_Comparison_Test {
 
 		ZipEntry projectionResultsEntry;
 		var outputSeen = false;
+		var parametersSeen = false;
 		while ( (projectionResultsEntry = zipFile.getNextEntry()) != null) {
+			if (Parameters.JSON_FILE_NAME.equals(projectionResultsEntry.getName())) {
+				parametersSeen = true;
+				continue;
+			}
+			Assert.assertFalse(parametersSeen); // parameters.json must be the last entry
+
 			String entryContent = new String(TestHelper.readZipEntry(zipFile, projectionResultsEntry));
 
 			if (projectionResultsEntry.getName().endsWith("ForwardCompatibility")) {
@@ -226,6 +233,7 @@ class Hcsv_Vdyp7_Comparison_Test {
 			outputSeen = true;
 		}
 		Assert.assertTrue(outputSeen);
+		Assert.assertTrue(parametersSeen);
 	}
 
 	// FIXME VDYP-604 Remove these once VDYP-604 is fixed.

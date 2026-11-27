@@ -32,6 +32,9 @@ import com.fasterxml.jackson.annotation.JsonValue;
 )
 public class Parameters {
 
+	/** Name of the file, in the projection results zip, that holds the request parameters as JSON. */
+	public static final String JSON_FILE_NAME = "parameters.json";
+
 	public static final String JSON_PROPERTY_OUTPUT_FORMAT = "outputFormat";
 	@JsonProperty(JSON_PROPERTY_OUTPUT_FORMAT)
 	private String outputFormat;

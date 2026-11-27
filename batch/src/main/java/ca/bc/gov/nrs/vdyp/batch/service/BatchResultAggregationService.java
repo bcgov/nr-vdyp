@@ -87,7 +87,7 @@ public class BatchResultAggregationService {
 
 			if (partitionOutputDirs.isEmpty()) {
 				logger.warn("No partition output directories found for aggregation");
-				return createEmptyResultZip(finalZipPath);
+				return createEmptyResultZip(finalZipPath, jobParameters);
 			}
 
 			// Aggregate results
@@ -95,6 +95,7 @@ public class BatchResultAggregationService {
 				aggregateYieldTables(partitionOutputDirs, zipOut);
 				aggregateLogs(partitionOutputDirs, zipOut, jobParameters);
 				writeTotalProgress(zipOut, finalProgress, duration);
+				writeParameters(zipOut, jobParameters);
 				logger.info("Successfully created consolidated ZIP file: {}", finalZipPath);
 			}
 
@@ -814,10 +815,31 @@ public class BatchResultAggregationService {
 	}
 
 	/**
+	 * Writes the projection request parameters JSON, as received with the job, to the ZIP as
+	 * {@link Parameters#JSON_FILE_NAME}. Nothing is written if the job has no parameters.
+	 */
+	private void writeParameters(ZipOutputStream zipOut, JobParameters jobParameters) throws IOException {
+		String parametersJson = jobParameters.getString(BatchConstants.Projection.PARAMETERS_JSON);
+		if (parametersJson == null || parametersJson.isBlank()) {
+			logger.warn("Job has no projection parameters; {} not written", Parameters.JSON_FILE_NAME);
+			return;
+		}
+		Parameters parameters = objectMapper.readValue(parametersJson, Parameters.class);
+		zipOut.putNextEntry(new ZipEntry(Parameters.JSON_FILE_NAME));
+		zipOut.write(
+				objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(parameters)
+						.getBytes(StandardCharsets.UTF_8)
+		);
+		zipOut.closeEntry();
+	}
+
+	/**
 	 * Creates an empty result ZIP file when no results are found.
 	 */
-	private Path createEmptyResultZip(Path zipPath) throws IOException {
+	private Path createEmptyResultZip(Path zipPath, JobParameters jobParameters) throws IOException {
 		try (ZipOutputStream zipOut = new ZipOutputStream(Files.newOutputStream(zipPath))) {
+			writeParameters(zipOut, jobParameters);
+
 			ZipEntry readmeEntry = new ZipEntry("README.txt");
 			zipOut.putNextEntry(readmeEntry);
 

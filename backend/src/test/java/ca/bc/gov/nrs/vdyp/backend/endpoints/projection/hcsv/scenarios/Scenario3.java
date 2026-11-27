@@ -68,7 +68,8 @@ class Scenario3 extends Scenario {
 						"", "", "", "", "", "", "Back"
 				)
 		);
-
+		ZipEntry params = zipFile.getNextEntry();
+		assertThat(params.getName(), is(Parameters.JSON_FILE_NAME));
 		assertTrue(zipFile.getNextEntry() == null);
 	}
 }

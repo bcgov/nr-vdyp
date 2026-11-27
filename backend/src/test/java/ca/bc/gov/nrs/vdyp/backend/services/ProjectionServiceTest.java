@@ -120,9 +120,11 @@ class ProjectionServiceTest {
 		when(runner.getErrorStream())
 				.thenReturn(new ByteArrayInputStream("polygon error".getBytes(StandardCharsets.UTF_8)));
 		when(runner.getProjectionResults()).thenReturn(Collections.emptyIterator());
-		var method = ProjectionService.class.getDeclaredMethod("buildOutputZipFile", ProjectionRunner.class);
+		var parametersJson = "{ \"ageStart\" : \"0\" }";
+		var method = ProjectionService.class
+				.getDeclaredMethod("buildOutputZipFile", ProjectionRunner.class, String.class);
 		method.setAccessible(true);
-		Response response = (Response) method.invoke(service, runner);
+		Response response = (Response) method.invoke(service, runner, parametersJson);
 		assertEquals(201, response.getStatus());
 		String messages = RunProcessingMessages.create(params);
 		Map<String, String> entries = new HashMap<>();
@@ -134,6 +136,7 @@ class ProjectionServiceTest {
 		}
 		assertEquals("single polygon report", entries.get("YieldReport.txt"));
 		assertEquals(errorLogging ? messages + "polygon error" : null, entries.get("ErrorLog.txt"));
+		assertEquals(parametersJson, entries.get(Parameters.JSON_FILE_NAME));
 	}
 
 	@Mock
